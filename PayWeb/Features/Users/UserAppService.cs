@@ -11,9 +11,9 @@ namespace PayWeb.Features.Users
 {
     public class UserAppService
     {
-        private readonly IUnitOfWorkPayWeb _unitOfWork;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UserAppService(IUnitOfWorkPayWeb unitOfWork)
+        public UserAppService(IUnitOfWork unitOfWork)
         {
             this._unitOfWork = unitOfWork;
         }
