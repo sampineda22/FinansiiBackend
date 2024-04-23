@@ -1,4 +1,5 @@
 ﻿using CRM.Infrastructure.Maps;
+using CRM.Infrastructure.Maps.Admin;
 using Microsoft.EntityFrameworkCore;
 using PayWeb.Infrastructure.Maps;
 using System;
@@ -20,6 +21,7 @@ namespace CRM.Infrastructure
             modelBuilder.ApplyConfiguration(new UserMap());
             modelBuilder.ApplyConfiguration(new BankStatementMap());
             modelBuilder.ApplyConfiguration(new BankStatementDetailsMap());
+            modelBuilder.ApplyConfiguration(new RolesMap());
         }
     }
 }

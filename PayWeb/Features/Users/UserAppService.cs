@@ -11,9 +11,9 @@ namespace PayWeb.Features.Users
 {
     public class UserAppService
     {
-        private readonly IUnitOfWorkPayWeb _unitOfWork;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UserAppService(IUnitOfWorkPayWeb unitOfWork)
+        public UserAppService(IUnitOfWork unitOfWork)
         {
             this._unitOfWork = unitOfWork;
         }
@@ -69,7 +69,7 @@ namespace PayWeb.Features.Users
 
         public UserDto FindByUserId(string userid)
         {
-            userid = "dtsItm";
+            //userid = "dtsItm";
             return (from u in _unitOfWork.Repository<User>().Query()
                     where u.UserId == userid
                     select new UserDto
@@ -84,8 +84,8 @@ namespace PayWeb.Features.Users
 
         public static bool IsValidUserCredentialsNew(string userId, string password)
         {
-            userId = "dtsItm";
-            password = "Intermoda2020";
+            /*userId = "dtsItm";
+            password = "Intermoda2020";*/
             if (string.IsNullOrWhiteSpace(userId))
             {
                 return false;
@@ -105,8 +105,8 @@ namespace PayWeb.Features.Users
 
         public bool IsValidUserCredentials(string userId, string password)
         {
-            userId = "dtsItm";
-            password = "Intermoda2020";
+            /*userId = "dtsItm";
+            password = "Intermoda2020";*/
             if (string.IsNullOrWhiteSpace(userId))
             {
                 return false;
@@ -126,7 +126,7 @@ namespace PayWeb.Features.Users
 
         public bool IsAnExistingUser(string userId)
         {
-            userId = "dtsItm";
+            //userId = "dtsItm";
             var user = FindByUserId(userId);
             if (user != null) 
             {

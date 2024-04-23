@@ -41,14 +41,13 @@ namespace PayWeb.Features.Security
                 return BadRequest();
             }
 
-            if (!_userService.IsValidUserCredentials(request.UserId, request.Password))
+            if (!_userService.IsValidUserCredentials(request.User, request.Password))
             {
                 return Unauthorized();
             }
 
-            if (!_userService.IsAnExistingUser(request.UserId))
+            /*if (!_userService.IsAnExistingUser(request.User))
             {
-
                 EntityResponse response = new EntityResponse
                 {
                     Ok = false,
@@ -59,26 +58,25 @@ namespace PayWeb.Features.Security
                 {
                     return BadRequest(response);
                 }
-
-            }
+            }*/
 
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.Name, request.UserId),
-                new Claim("Cod_Empresa",request.Cod_Empresa),
+                new Claim(ClaimTypes.Name, request.User),
+                new Claim("Cod_Empresa",request.CompanyCode),
                 new Claim("Contra",request.Password)
 
             };
 
-            var jwtResult = _jwtAuthManager.GenerateTokens(request.UserId, claims, DateTime.Now);
-            _logger.LogInformation($"User [{request.UserId}] logged in the system.");
+            var jwtResult = _jwtAuthManager.GenerateTokens(request.User, claims, DateTime.Now);
+            _logger.LogInformation($"User [{request.User}] logged in the system.");
             return Ok(new LoginResult
             {
-                UserId = request.UserId,
+                UserId = request.User,
                 AccessToken = jwtResult.AccessToken,
                 RefreshToken = jwtResult.RefreshToken.TokenString,
-                Cod_Empresa = request.Cod_Empresa
+                Cod_Empresa = request.CompanyCode
             });
         }
         
@@ -169,13 +167,13 @@ namespace PayWeb.Features.Security
     public class LoginRequest
     {
         [Required]
-        [JsonPropertyName("userId")]
-        public string UserId { get; set; }
+        [JsonPropertyName("user")]
+        public string User { get; set; }
 
         [Required]
         [JsonPropertyName("password")]
         public string Password { get; set; }
-        public string Cod_Empresa { get; set; }
+        public string CompanyCode { get; set; }
     }
     public class LoginUserPasswordRequest
     {
