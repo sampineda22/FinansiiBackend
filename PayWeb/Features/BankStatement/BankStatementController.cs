@@ -47,5 +47,12 @@ namespace CRM.Features.BankStatement
             var response = await _bankStatementAppService.GetAll();
             return Ok(response);
         }
+
+        [HttpGet("ImportStatementFromFileByAccountId")]
+        public async Task<IActionResult> ImportStatementFromFileByAccountId(string accountId)
+        {
+            var response = await _bankStatementAppService.ImportStatementFromFileByAccount(accountId);
+            return Ok(response);
+        }
     }
 }

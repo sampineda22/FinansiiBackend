@@ -17,7 +17,7 @@ namespace CRM.Infrastructure.Maps
             builder.Property(e => e.TransactionCode).HasMaxLength(10).IsRequired();
             builder.Property(e => e.Description).HasMaxLength(125).IsRequired();
             builder.Property(e => e.Reference).HasMaxLength(125).IsRequired();
-            builder.Property(e => e.TransactionDate);
+            builder.Property(e => e.TransactionDate).HasColumnType("datetime");
             builder.Property(e => e.Amount).HasPrecision(18, 2);
             builder.Property(e => e.Type);
             builder.HasOne(c => c.BankStatement).WithMany().HasForeignKey(c => c.BankStatementId)
