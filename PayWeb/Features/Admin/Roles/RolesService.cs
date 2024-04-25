@@ -1,7 +1,10 @@
 ﻿using CRM.Features.BankStatement;
 using Microsoft.EntityFrameworkCore;
+using PayWeb.Common;
 using PayWeb.Infrastructure.Core;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -16,23 +19,59 @@ namespace CRM.Features.Admin.Roles
             this._unitOfWork = unitOfWork;
         }
 
-        public async Task<List<Roles>> GetAllRoles()
+        public async Task<List<Role>> GetAllRoles()
         {
-            List<Roles> roles2 = await (from u in _unitOfWork.Repository<Roles>().Query()
-                                        select new Roles
-                                        {
-                                            RoleId = u.RoleId,
-                                            CompanyCode = u.CompanyCode,
-                                            Description = u.Description,
-                                            CreationDate = u.CreationDate,
-                                            CreationUser = u.CreationUser,
-                                            UpdateDate = u.UpdateDate,
-                                            UpdateUser = u.UpdateUser
-                                        }).ToListAsync();
-
-            List<Roles> roles = _unitOfWork.Repository<Roles>().Query().Where(x => x.RoleId == 1).ToList();
+            List<Role> roles = _unitOfWork.Repository<Role>().Query().ToList();
 
             return roles;
+        }
+
+        public async Task<EntityResponse> PostRole(RoleDto roleDto, string companyCode, string user)
+        {
+
+            try
+            {
+                Role role = _unitOfWork.Repository<Role>().Query().Where(x => x.Description.ToLower().Replace(" ", "") == roleDto.Description.ToLower().Replace(" ", "")).FirstOrDefault();
+
+                if (role == null)
+                {
+                    role = new()
+                    {
+                        CompanyCode = companyCode,
+                        Description = roleDto.Description,
+                        CreationDate = DateTime.Now,
+                        CreationUser = user
+                    };
+
+                    _unitOfWork.Repository<Role>().Add(role);
+                    await _unitOfWork.SaveChangesAsync();
+                    return EntityResponse.CreateOk();
+                }
+
+                return EntityResponse.CreateError("Se encontró un rol con el mismo nombre");
+
+            }
+            catch (Exception ex)
+            {
+                return EntityResponse.CreateError(ex.Message);
+            }
+
+        }
+
+        public async Task<EntityResponse> DeleteRole(int roleId)
+        {
+            try
+            {
+                Role role = _unitOfWork.Repository<Role>().Query().Where(x => x.RoleId == roleId).First();
+
+                _unitOfWork.Repository<Role>().Delete(role);
+                await _unitOfWork.SaveChangesAsync();
+                return EntityResponse.CreateOk();
+            }
+            catch (Exception ex)
+            {
+                return EntityResponse.CreateError(ex.Message);
+            }
         }
     }
 }
