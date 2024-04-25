@@ -4,14 +4,16 @@ using CRM.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CRM.Migrations
 {
     [DbContext(typeof(IMFinanzasContext))]
-    partial class IMFinanzasContextModelSnapshot : ModelSnapshot
+    [Migration("20240425170821_ActualizacionTablaBankConfiguration")]
+    partial class ActualizacionTablaBankConfiguration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -132,14 +134,6 @@ namespace CRM.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<string>("AccountId")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("CompanyId")
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
                     b.Property<DateTime>("CreateDateTime")
                         .HasColumnType("datetime2");
 
@@ -169,10 +163,6 @@ namespace CRM.Migrations
 
                     b.Property<int>("BankStatementId")
                         .HasColumnType("int");
-
-                    b.Property<string>("CurrencyCode")
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)");
 
                     b.Property<string>("Description")
                         .IsRequired()
