@@ -10,6 +10,7 @@ namespace CRM.Features.BankStatementDetails
     {
         public int BankStatementDetailId { get; set; }
         public int BankStatementId { get; set; }
+        public string CurrencyCode { get; set; }
         public DateTime TransactionDate { get; set; }
         public string TransactionCode { get; set; }
         public string Description { get; set; }
