@@ -1,6 +1,9 @@
 using System;
 using System.Text;
 using CRM.Features.Admin.Roles;
+using CRM.Features.BankConfiguration;
+using CRM.Features.BankStatement;
+using CRM.Features.BankStatementDetails;
 using CRM.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -122,6 +125,9 @@ namespace PayWeb
 
             services.AddScoped<UserAppService>();
             services.AddScoped<RolesService>();
+            services.AddScoped<BankStatementAppService>();
+            services.AddScoped<BankStatementDetailsAppService>();
+            services.AddScoped<BankConfigurationAppService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

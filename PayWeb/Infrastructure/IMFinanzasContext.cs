@@ -22,6 +22,7 @@ namespace CRM.Infrastructure
             modelBuilder.ApplyConfiguration(new BankStatementMap());
             modelBuilder.ApplyConfiguration(new BankStatementDetailsMap());
             modelBuilder.ApplyConfiguration(new RolesMap());
+            modelBuilder.ApplyConfiguration(new BankConfigurationMap());
         }
     }
 }
