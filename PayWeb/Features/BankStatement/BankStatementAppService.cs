@@ -35,6 +35,8 @@ namespace CRM.Features.BankStatement
             BankStatement bankStatement = new BankStatement
             {
                 BankStatementId = bankStatementDto.BankStatementId,
+                CompanyId = bankStatementDto.CompanyId,
+                AccountId = bankStatementDto.AccountId,
                 Account = bankStatementDto.Account,
                 Description = bankStatementDto.Description,
                 Status = BankStatatementState.Pending,
@@ -87,6 +89,8 @@ namespace CRM.Features.BankStatement
                                             List<MT940Transaction> transactions = ReadMT940File(ruta);
                                             if (transactions.Count > 0)
                                             {
+                                                bankStatementDto.CompanyId = bankConfiguraion.CompanyId;
+                                                bankStatementDto.AccountId = bankConfiguraion.AccountId;
                                                 bankStatementDto.Account = transactions.FirstOrDefault().Account;
                                                 bankStatementDto.CreateDateTime = DateTime.Now;
                                                 bankStatementDto.Description = $"Archivo {transactions.FirstOrDefault().Account} Fecha {transactions.FirstOrDefault().Date}";
@@ -100,6 +104,8 @@ namespace CRM.Features.BankStatement
                                                 BankStatement bankStatement = new BankStatement
                                                 {
                                                     BankStatementId = bankStatementDto.BankStatementId,
+                                                    CompanyId = bankStatementDto.CompanyId,
+                                                    AccountId = bankStatementDto.AccountId,
                                                     Account = bankStatementDto.Account,
                                                     Description = bankStatementDto.Description,
                                                     Status = BankStatatementState.Pending,
@@ -117,7 +123,8 @@ namespace CRM.Features.BankStatement
                                                         Reference = transaction.Reference,
                                                         Amount = transaction.Amount,
                                                         Type = transaction.Type.Equals("C") ? TransactionType.Credit : TransactionType.Debit,
-                                                        BankStatement = bankStatement
+                                                        BankStatement = bankStatement,
+                                                        CurrencyCode = transaction.CurrencyCode
                                                     });
                                                 }
                                                 _unitOfWork.Repository<BankStatement>().Add(bankStatement);
@@ -133,8 +140,6 @@ namespace CRM.Features.BankStatement
                             }
                         }
                     }
-                    
-                    client.Dispose();
                     client.Disconnect();
                 }
                 catch (Exception ex)
@@ -153,6 +158,8 @@ namespace CRM.Features.BankStatement
                                                             select new BankStatementDto
                                                             {
                                                                 BankStatementId = u.BankStatementId,
+                                                                CompanyId = u.CompanyId,
+                                                                AccountId = u.AccountId,
                                                                 Account = u.Account,
                                                                 Description = u.Description,
                                                                 CreateDateTime = u.CreateDateTime,
@@ -168,6 +175,8 @@ namespace CRM.Features.BankStatement
                     select new BankStatementDto
                     {
                         BankStatementId = u.BankStatementId,
+                        CompanyId = u.CompanyId,
+                        AccountId = u.AccountId,
                         Account = u.Account,
                         Description = u.Description,
                         CreateDateTime = u.CreateDateTime,
@@ -178,6 +187,7 @@ namespace CRM.Features.BankStatement
         {
             List<MT940Transaction> transactions = new List<MT940Transaction>();
             string account = "";
+            string currencyCode = "";
             using (StreamReader reader = new StreamReader(filePath))
             {
                 string line;
@@ -185,6 +195,10 @@ namespace CRM.Features.BankStatement
 
                 while ((line = reader.ReadLine()) != null)
                 {
+                    if (line.StartsWith(":60F:"))
+                    {
+                        currencyCode = line.Substring(12,3);
+                    }
                     if (line.StartsWith(":25:"))
                     {
                         account = line.Substring(4);
@@ -198,6 +212,7 @@ namespace CRM.Features.BankStatement
                         if (parts.Length >= 2)
                         {
                             currentTransaction.Account = account;
+                            currentTransaction.CurrencyCode = currencyCode;
                             var date = "20" + parts[0].Substring(4, 6);
                             var year = int.Parse(date.Substring(0, 4));
                             var month = int.Parse(date.Substring(4, 2));
