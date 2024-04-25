@@ -2,7 +2,7 @@
 
 namespace CRM.Features.Admin.Roles
 {
-    public class Roles
+    public class Role
     {
         public string CompanyCode { get; set; }
         public int RoleId { get; set; }
