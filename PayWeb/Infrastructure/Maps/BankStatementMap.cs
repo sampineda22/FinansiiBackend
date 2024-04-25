@@ -14,6 +14,8 @@ namespace CRM.Infrastructure.Maps
         {
             builder.ToTable("BankStatement");
             builder.HasKey(e => e.BankStatementId);
+            builder.Property(e => e.CompanyId).HasMaxLength(4);
+            builder.Property(e => e.AccountId).HasMaxLength(20);
             builder.Property(e => e.Account).HasMaxLength(20).IsRequired();
             builder.Property(e => e.Description).HasMaxLength(150).IsRequired();
             builder.Property(e => e.CreateDateTime);

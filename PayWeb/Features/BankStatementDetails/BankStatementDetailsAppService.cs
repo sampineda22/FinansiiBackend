@@ -28,6 +28,7 @@ namespace CRM.Features.BankStatementDetails
             {
                 BankStatementDetailId = bankStatementDetailsDto.BankStatementDetailId,
                 BankStatementId = bankStatementDetailsDto.BankStatementId,
+                CurrencyCode = bankStatementDetailsDto.CurrencyCode,
                 TransactionDate = bankStatementDetailsDto.TransactionDate,
                 TransactionCode = bankStatementDetailsDto.TransactionCode,
                 Description = bankStatementDetailsDto.Description,
@@ -49,6 +50,7 @@ namespace CRM.Features.BankStatementDetails
                                                            {
                                                                BankStatementDetailId = u.BankStatementDetailId,
                                                                BankStatementId = u.BankStatementId,
+                                                               CurrencyCode = u.CurrencyCode,
                                                                TransactionDate = u.TransactionDate,
                                                                TransactionCode = u.TransactionCode,
                                                                Description = u.Description,
@@ -67,6 +69,7 @@ namespace CRM.Features.BankStatementDetails
                                                                          {
                                                                              BankStatementDetailId = u.BankStatementDetailId,
                                                                              BankStatementId = u.BankStatementId,
+                                                                             CurrencyCode = u.CurrencyCode,
                                                                              TransactionDate = u.TransactionDate,
                                                                              TransactionCode = u.TransactionCode,
                                                                              Description = u.Description,
@@ -84,6 +87,7 @@ namespace CRM.Features.BankStatementDetails
                     {
                         BankStatementDetailId = u.BankStatementDetailId,
                         BankStatementId = u.BankStatementId,
+                        CurrencyCode = u.CurrencyCode,
                         TransactionDate = u.TransactionDate,
                         TransactionCode = u.TransactionCode,
                         Description = u.Description,

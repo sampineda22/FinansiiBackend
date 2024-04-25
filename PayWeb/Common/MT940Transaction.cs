@@ -13,6 +13,7 @@ namespace CRM.Common
         public string Type { get; set; }
         public string Reference { get; set; }
         public string Description { get; set; }
+        public string CurrencyCode { get; set; }
 
         public override string ToString()
         {
