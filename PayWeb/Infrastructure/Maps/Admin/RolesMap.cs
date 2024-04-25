@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CRM.Infrastructure.Maps.Admin
 {
-    public class RolesMap : IEntityTypeConfiguration<Roles>
+    public class RolesMap : IEntityTypeConfiguration<Role>
     {
-        public void Configure(EntityTypeBuilder<Roles> builder)
+        public void Configure(EntityTypeBuilder<Role> builder)
         {
             builder.ToTable("Roles", "Admin");
             builder.HasKey(e => new { e.RoleId, e.CompanyCode });
