@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using CRM.Features.Admin.Roles;
+using CRM.Features.HostToHostBanPais;
 using CRM.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -122,6 +123,8 @@ namespace PayWeb
 
             services.AddScoped<UserAppService>();
             services.AddScoped<RolesService>();
+            services.AddScoped<HostToHostBanPaisServices>();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
