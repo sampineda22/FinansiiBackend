@@ -8,7 +8,7 @@ namespace CRM.Features.BankStatementServiceAX
 {
     public class BANKSTATEMENTHEAD
     {
-        [XmlElement("BANKSTATEMENTLINE",typeof(BANKSTATEMENTLINES))]
+        [XmlElement("BANKSTATEMENTLINES", typeof(BANKSTATEMENTLINES))]
         public BANKSTATEMENTLINES[] LINES { get; set; }
     }
     public class BANKSTATEMENTLINES

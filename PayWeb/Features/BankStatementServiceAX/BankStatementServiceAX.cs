@@ -13,6 +13,7 @@ namespace CRM.Features.BankStatementServiceAX
         public decimal AMOUNTCURDEBIT { get; set; }
         public decimal AMOUNTCURCREDIT { get; set; }
         public string ACCOUNTNUM { get; set; }
+        public string CompanyId { get; set; }
 
     }
 }
