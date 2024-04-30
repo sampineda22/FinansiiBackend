@@ -36,7 +36,7 @@ namespace CRM.Features.BankStatementServiceAX
             };
 
             var data =_unitOfWork.Repository<BankStatementServiceAX>().GetSP<BankStatementServiceAX>("IM_GetBankstatementLines",parameters).ToList();
-
+            string TransactionCodeNull = "";
             data.ForEach(element =>
             {
                 BANKSTATEMENTLINES LINE = new BANKSTATEMENTLINES();
@@ -47,7 +47,16 @@ namespace CRM.Features.BankStatementServiceAX
                 LINE.AMOUNTCURCREDIT = element.AMOUNTCURCREDIT;
                 LINE.ACCOUNTNUM = element.ACCOUNTNUM;
                 LIST.Add(LINE);
+                if (LINE.JOURNALNAMEID == null)
+                {
+                    TransactionCodeNull += (TransactionCodeNull != "" ? "," : "") +element.TransactionCode;
+                }
             });
+
+            if(TransactionCodeNull != "")
+            {
+                return EntityResponse.CreateError("Transacciones no configuradas: " + TransactionCodeNull);
+            }
 
             HEADER.LINES = LIST.ToArray();
 

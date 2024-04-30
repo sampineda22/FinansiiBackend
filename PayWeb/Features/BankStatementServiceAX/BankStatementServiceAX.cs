@@ -8,6 +8,7 @@ namespace CRM.Features.BankStatementServiceAX
     public class BankStatementServiceAX
     {
         public string JOURNALNAMEID { get; set; }
+        public string TransactionCode { get; set; }
         public string CURRENCYCODE { get; set; }
         public string LEDGERJOURNALTRANSTXT { get; set; }
         public decimal AMOUNTCURDEBIT { get; set; }
