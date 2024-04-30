@@ -11,6 +11,7 @@ namespace PayWeb.Features.Users
         public string UserId { get; set; }
         public string Password { get; set; }
         public bool State { get; set; }
+        public string CompanyCode { get; set; }
         public DateTime CreateDateTime { get; set; }
     }
 }

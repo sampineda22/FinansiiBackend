@@ -3,6 +3,7 @@ using PayWeb.Common;
 using PayWeb.Infrastructure.Core;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -43,10 +44,10 @@ namespace CRM.Features.BankConfiguration
             bankConfigurationDto.BankConfigurationId = bankConfiguration.BankConfigurationId;
             return EntityResponse.CreateOk();
         }
-        public async Task<List<BankConfigurationDto>> GetAll()
+        public async Task<List<BankConfigurationDto>> GetAll(string companyCode)
         {
-            List<BankConfigurationDto> bankConfigurations = await (from u in _unitOfWork.Repository<BankConfiguration>().Query()
-                                                           select new BankConfigurationDto
+            List<BankConfigurationDto> bankConfigurations = await (from u in _unitOfWork.Repository<BankConfiguration>().Query() where u.CompanyId == companyCode
+                                                                   select new BankConfigurationDto
                                                            {
                                                                BankConfigurationId = u.BankConfigurationId,
                                                                CompanyId = u.CompanyId,

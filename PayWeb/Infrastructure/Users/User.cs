@@ -14,12 +14,13 @@ namespace PayWeb.Features.Users
         public bool State { get; set; }
         public DateTime CreateDateTime { get; set; }
         public string Cod_Empresa { get; set; }
+        public string PersonalCode { get; set; }
         public User()
         {
 
         }
 
-        public User(string userId, string password, string cod_Empresa)
+        public User(string userId, string password, string companyCode)
         {
             if (string.IsNullOrWhiteSpace(userId))
             {

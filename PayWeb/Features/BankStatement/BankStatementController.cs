@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PayWeb.Common;
+using PayWeb.Features.Users;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,10 +18,30 @@ namespace CRM.Features.BankStatement
     public class BankStatementController: ControllerBase
     {
         private readonly BankStatementAppService _bankStatementAppService;
+        private User loggedUser = new User { };
 
-        public BankStatementController(BankStatementAppService bankStatementAppService)
+        public BankStatementController(IHttpContextAccessor httpContextAccessor, BankStatementAppService bankStatementAppService)
         {
             this._bankStatementAppService = bankStatementAppService;
+
+            if (httpContextAccessor.HttpContext.User.Identity.Name != null)
+            {
+                var empresa = "";
+                try
+                {
+                    empresa = httpContextAccessor.HttpContext.User.Claims.First(c => c.Type == "Cod_Empresa")?.Value ?? string.Empty;
+                }
+                catch (Exception)
+                {
+                    empresa = "";
+                }
+
+                loggedUser = new User
+                {
+                    UserId = httpContextAccessor.HttpContext.User.Identity.Name ?? string.Empty,
+                    Cod_Empresa = empresa
+                };
+            }
         }
 
         [HttpPost("AddBankStatement")]
@@ -45,6 +67,13 @@ namespace CRM.Features.BankStatement
         public async Task<IActionResult> GetAllAsync()
         {
             var response = await _bankStatementAppService.GetAll();
+            return Ok(response);
+        }
+
+        [HttpGet("GetByAccountId/{accountId}/{date}/{companyCode}")]
+        public async Task<IActionResult> GetByAccountId(string accountId, string date, string companyCode)
+        {
+            var response = await _bankStatementAppService.GetByAccountId(accountId, date, companyCode);
             return Ok(response);
         }
 

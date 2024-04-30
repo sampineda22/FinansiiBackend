@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PayWeb.Common;
 using PayWeb.Infrastructure.Core;
-using System;
 using System.Collections.Generic;
 using System.DirectoryServices.AccountManagement;
 using System.Linq;
@@ -30,7 +29,8 @@ namespace PayWeb.Features.Users
                 UserId = userDto.UserId,
                 Password = userDto.Password,
                 State = userDto.State,
-                CreateDateTime = userDto.CreateDateTime
+                CreateDateTime = userDto.CreateDateTime,
+                Cod_Empresa = userDto.CompanyCode
             };
 
             _unitOfWork.Repository<User>().Add(user);
@@ -78,7 +78,8 @@ namespace PayWeb.Features.Users
                         UserId = u.UserId,
                         Password = u.Password,
                         State = u.State,
-                        CreateDateTime = u.CreateDateTime
+                        CreateDateTime = u.CreateDateTime,
+                        CompanyCode = u.Cod_Empresa
                     }).FirstOrDefault();
         }
 

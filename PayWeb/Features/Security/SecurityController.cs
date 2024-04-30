@@ -60,6 +60,7 @@ namespace PayWeb.Features.Security
                 }
             }*/
 
+            request.CompanyCode = _userService.FindByUserId(request.User).CompanyCode;
 
             var claims = new[]
             {
@@ -76,7 +77,7 @@ namespace PayWeb.Features.Security
                 UserId = request.User,
                 AccessToken = jwtResult.AccessToken,
                 RefreshToken = jwtResult.RefreshToken.TokenString,
-                Cod_Empresa = request.CompanyCode
+                CompanyCode = request.CompanyCode
             });
         }
         
@@ -199,7 +200,7 @@ namespace PayWeb.Features.Security
 
         [JsonPropertyName("refreshToken")]
         public string RefreshToken { get; set; }
-        public string Cod_Empresa { get; set; }
+        public string CompanyCode { get; set; }
         public int CodEmpresaInt { get; set; }
     }
     public class LoginWithCompanyResult

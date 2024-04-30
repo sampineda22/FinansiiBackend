@@ -13,6 +13,8 @@ using static CRM.Infrastructure.Enum.BankStatementStatus;
 using static CRM.Infrastructure.Enum.TransactionsType;
 using Renci.SshNet;
 using static CRM.Infrastructure.Enum.Banks;
+using CRM.Features.Admin.Roles;
+using Microsoft.Identity.Client;
 
 namespace CRM.Features.BankStatement
 {
@@ -165,6 +167,18 @@ namespace CRM.Features.BankStatement
                                                                 CreateDateTime = u.CreateDateTime,
                                                                 Status = u.Status
                                                             }).ToListAsync();
+            return bankStatements;
+        }
+
+        public async Task<List<BankStatement>> GetByAccountId(string accountId, string date, string companyCode)
+        {
+            DateTime transferDate = DateTime.Parse(date);
+
+            List<BankStatement> bankStatements = _unitOfWork.Repository<BankStatement>().Query().Where(x => x.AccountId == accountId && 
+                                                                                                            x.CreateDateTime.Year == transferDate.Year &&
+                                                                                                            x.CreateDateTime.Month == transferDate.Month &&
+                                                                                                            x.CreateDateTime.Date == transferDate.Date &&
+                                                                                                            x.CompanyId == companyCode).ToList();
             return bankStatements;
         }
 

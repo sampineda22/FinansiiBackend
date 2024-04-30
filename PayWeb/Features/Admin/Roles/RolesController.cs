@@ -29,7 +29,7 @@ namespace CRM.Features.Admin.Roles
                 var empresa = "";
                 try
                 {
-                    empresa = httpContextAccessor.HttpContext.User.Claims.First(c => c.Type == "Cod_Empresa")?.Value ?? string.Empty;
+                    empresa = httpContextAccessor.HttpContext.User.Claims.First(c => c.Type == /*"Cod_Empresa"*/ "CompanyCode")?.Value ?? string.Empty;
                 }
                 catch (Exception)
                 {
