@@ -46,6 +46,8 @@ namespace CRM.Features.BankStatementServiceAX
                 LINE.AMOUNTCURDEBIT = element.AMOUNTCURDEBIT;
                 LINE.AMOUNTCURCREDIT = element.AMOUNTCURCREDIT;
                 LINE.ACCOUNTNUM = element.ACCOUNTNUM;
+                LINE.PAYMREFERENCE = element.PAYMREFERENCE;
+                LINE.TRANSDATE = element.TRANSDATE.Day + "/"+element.TRANSDATE.Month+"/"+element.TRANSDATE.Year;
                 LIST.Add(LINE);
                 if (LINE.JOURNALNAMEID == null)
                 {
