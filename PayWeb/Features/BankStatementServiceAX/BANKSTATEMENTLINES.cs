@@ -18,6 +18,10 @@ namespace CRM.Features.BankStatementServiceAX
         [XmlElement]
         public string CURRENCYCODE { get; set; }
         [XmlElement]
+        public string TRANSDATE { get; set; }
+        [XmlElement]
+        public string PAYMREFERENCE { get; set; }
+        [XmlElement]
         public string LEDGERJOURNALTRANSTXT { get; set; }
         [XmlElement]
         public decimal AMOUNTCURDEBIT { get; set; }
