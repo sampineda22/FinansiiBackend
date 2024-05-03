@@ -4,6 +4,8 @@ using CRM.Features.Admin.Roles;
 using CRM.Features.BankConfiguration;
 using CRM.Features.BankStatement;
 using CRM.Features.BankStatementDetails;
+using CRM.Features.BankStatementServiceAX;
+using CRM.Features.HostToHostBanPais;
 using CRM.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -128,6 +130,8 @@ namespace PayWeb
             services.AddScoped<BankStatementAppService>();
             services.AddScoped<BankStatementDetailsAppService>();
             services.AddScoped<BankConfigurationAppService>();
+            services.AddScoped<HostToHostBanPaisServices>();
+            services.AddScoped<BanskStatementServiceAXService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
