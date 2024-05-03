@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static CRM.Infrastructure.Enum.TransactionsType;
 
 namespace CRM.Features.BankStatementDetails
 {
@@ -95,6 +96,29 @@ namespace CRM.Features.BankStatementDetails
                         Amount = u.Amount,
                         Type = u.Type
                     }).FirstOrDefault();
+        }
+
+        public async Task<EntityResponse> DeleteDetails(int bankStatementId)
+        {
+            List<BankStatementDetailsDto> details = await GetAllByBankStatement(bankStatementId);
+
+            var detailsToDelete = details.Select(detailsDto => new BankStatementDetails
+            {
+                BankStatementDetailId = detailsDto.BankStatementDetailId,
+                BankStatementId = detailsDto.BankStatementId,
+                CurrencyCode = detailsDto.CurrencyCode,
+                TransactionDate = detailsDto.TransactionDate,
+                TransactionCode = detailsDto.TransactionCode,
+                Description = detailsDto.Description,
+                Reference = detailsDto.Reference,
+                Amount = detailsDto.Amount,
+                Type = detailsDto.Type
+            }).ToList();
+
+            _unitOfWork.Repository<BankStatementDetails>().DeleteRange(detailsToDelete);
+            await _unitOfWork.SaveChangesAsync();
+
+            return EntityResponse.CreateOk();
         }
     }
 }

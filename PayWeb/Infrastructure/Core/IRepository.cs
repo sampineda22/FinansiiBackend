@@ -18,9 +18,6 @@ namespace PayWeb.Infrastructure.Core
         void Delete(T entity);
 
         void Update(T entity);
-
-
-       
-
+        void DeleteRange(IEnumerable<T> entities);
     }
 }

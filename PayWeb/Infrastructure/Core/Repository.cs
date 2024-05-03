@@ -101,6 +101,11 @@ namespace PayWeb.Infrastructure.Core
             dbContext.Set<T>().Remove(entity);
         }
 
+        public void DeleteRange(IEnumerable<T> entities)
+        {
+            dbContext.Set<T>().RemoveRange(entities);
+        }
+
         public int ExecuteSPT(string query, SqlParameter parameter)
         {
             int ExecutionResult = 0;

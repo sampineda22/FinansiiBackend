@@ -13,16 +13,19 @@ using ServiceReference1;
 using System.ServiceModel;
 using System;
 using System.ServiceModel.Channels;
+using CRM.Features.BankStatement;
 
 namespace CRM.Features.BankStatementServiceAX
 {
     public class BanskStatementServiceAXService 
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly BankStatementAppService _bankStatementAppService;
 
-        public BanskStatementServiceAXService(IUnitOfWork unitOfWork)
+        public BanskStatementServiceAXService(IUnitOfWork unitOfWork, BankStatementAppService bankStatementAppService)
         {
             _unitOfWork = unitOfWork;
+            _bankStatementAppService = bankStatementAppService;
         }
 
         public async Task<EntityResponse> SendBankStatement(int BankStatementID)
@@ -76,6 +79,7 @@ namespace CRM.Features.BankStatementServiceAX
                 request._lineXML = BankStatementLines;
                 var resp = serviceClient.initAsync(request);
 
+                await _bankStatementAppService.UpdateStatus(BankStatementID, Infrastructure.Enum.BankStatementStatus.BankStatatementState.Processed);
 
                 return EntityResponse.CreateOk(resp.Result.response);
             }

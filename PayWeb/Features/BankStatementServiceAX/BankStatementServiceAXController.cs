@@ -21,8 +21,8 @@ namespace CRM.Features.BankStatementServiceAX
             _banskStatementServiceAXService = banskStatementServiceAXService;
         }
 
-        [HttpGet("SendBankStatementeServiceAX/{BankStatementId}")]
-        public async Task<IActionResult> SendBankStatementeServiceAX(int BankStatementId)
+        [HttpGet("SendBankStatementServiceAX/{BankStatementId}")]
+        public async Task<IActionResult> SendBankStatementServiceAX(int BankStatementId)
         {
             EntityResponse response = await _banskStatementServiceAXService.SendBankStatement(BankStatementId);
             if (!response.Ok)

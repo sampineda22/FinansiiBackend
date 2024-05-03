@@ -1,5 +1,4 @@
 ﻿using CRM.Common;
-using CRM.Features.BankStatementDetails;
 using CRM.Features.BankConfiguration;
 using Microsoft.EntityFrameworkCore;
 using PayWeb.Common;
@@ -15,16 +14,21 @@ using Renci.SshNet;
 using static CRM.Infrastructure.Enum.Banks;
 using CRM.Features.Admin.Roles;
 using Microsoft.Identity.Client;
+using CRM.Infrastructure.Enum;
+using CRM.Features.BankStatementDetails;
+using Microsoft.AspNetCore.Http;
 
 namespace CRM.Features.BankStatement
 {
     public class BankStatementAppService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly BankStatementDetailsAppService _bankStatementDetailsAppService;
 
-        public BankStatementAppService(IUnitOfWork unitOfWork)
+        public BankStatementAppService(IUnitOfWork unitOfWork, BankStatementDetailsAppService bankStatementDetailsAppService)
         {
             this._unitOfWork = unitOfWork;
+            this._bankStatementDetailsAppService = bankStatementDetailsAppService;
         }
 
         public async Task<EntityResponse> AddBankStatementAsync(BankStatementDto bankStatementDto)
@@ -51,8 +55,27 @@ namespace CRM.Features.BankStatement
             return EntityResponse.CreateOk();
         }
 
-        public async Task<EntityResponse> ImportStatementFromFileByAccount(string accountId)
+        public async Task<EntityResponse> ImportStatementFromFileByAccount(string accountId, string dateString, string companyCode)
         {
+            DateTime creationDate = DateTime.Now;
+            bool wasFound = false;
+            string fileName, ruta;
+
+            if (dateString != null)
+            {
+                if(dateString.Replace(" ", "") != "")
+                {
+                    creationDate = DateTime.Parse(dateString);
+                    /*List<BankStatement> bankStatements = await GetByAccountId(accountId, dateString, companyCode);
+
+                    foreach (BankStatement bankStatement in bankStatements.FindAll(x => x.Status != BankStatatementState.Processed))
+                    {
+                        await _bankStatementDetailsAppService.DeleteDetails(bankStatement.BankStatementId);
+                        await DeleteBankStatement(bankStatement);
+                    }*/
+                }
+            }
+
             var bankConfiguraion = _unitOfWork.Repository<CRM.Features.BankConfiguration.BankConfiguration>().Query().FirstOrDefault(b => b.AccountId.Equals(accountId));
             if (bankConfiguraion == null)
             {
@@ -70,73 +93,33 @@ namespace CRM.Features.BankStatement
                         var files = client.ListDirectory(bankConfiguraion.FileRoute);
                         if (bankConfiguraion.Bank == Bank.BAC)
                         {
-                            string year = DateTime.Now.Year.ToString();
-                            string month = DateTime.Now.Month < 10 ? "0" + DateTime.Now.Month.ToString() : DateTime.Now.Month.ToString();
-                            string day = DateTime.Now.Day < 10 ? "0" + DateTime.Now.Day.ToString() : DateTime.Now.Day.ToString();
+                            string year = creationDate.Year.ToString();
+                            string month = creationDate.Month < 10 ? "0" + creationDate.Month.ToString() : creationDate.Month.ToString();
+                            string day = creationDate.Day < 10 ? "0" + creationDate.Day.ToString() : creationDate.Day.ToString();
                             string date = year + "-" + month + "-" + day;
-                            string fileName = (bankConfiguraion.FileName + bankConfiguraion.AccountNumber + '-' + date).Trim();
+                            fileName = (bankConfiguraion.FileName + bankConfiguraion.AccountNumber + '-' + date).Trim();
                             foreach (var file in files)
                             {
                                 if (!file.IsDirectory)
                                 {
                                     string fileFromSftp = file.Name.Substring(0, 47).Trim();
-                                    string ruta = @""+ bankConfiguraion.LocalFileRoute + file.Name + ".txt";
+                                    ruta = @""+ bankConfiguraion.LocalFileRoute + file.Name + ".txt";
+
                                     if (fileFromSftp.Equals(fileName))
                                     {
+                                        wasFound = true;
                                         using (var fileStream = System.IO.File.Create(ruta))
                                         {
                                             client.DownloadFile(file.FullName, fileStream);
                                             fileStream.Close();
-
-                                            List<MT940Transaction> transactions = ReadMT940File(ruta);
-                                            if (transactions.Count > 0)
-                                            {
-                                                bankStatementDto.CompanyId = bankConfiguraion.CompanyId;
-                                                bankStatementDto.AccountId = bankConfiguraion.AccountId;
-                                                bankStatementDto.Account = transactions.FirstOrDefault().Account;
-                                                bankStatementDto.CreateDateTime = DateTime.Now;
-                                                bankStatementDto.Description = $"Archivo {transactions.FirstOrDefault().Account} Fecha {transactions.FirstOrDefault().Date}";
-                                                bankStatementDto.Status = BankStatatementState.Pending;
-
-                                                if (bankStatementDto == null)
-                                                {
-                                                    return EntityResponse.CreateError("Los datos para crear estado de cuenta son obligatorios.");
-                                                }
-
-                                                BankStatement bankStatement = new BankStatement
-                                                {
-                                                    BankStatementId = bankStatementDto.BankStatementId,
-                                                    CompanyId = bankStatementDto.CompanyId,
-                                                    AccountId = bankStatementDto.AccountId,
-                                                    Account = bankStatementDto.Account,
-                                                    Description = bankStatementDto.Description,
-                                                    Status = BankStatatementState.Pending,
-                                                    CreateDateTime = bankStatementDto.CreateDateTime
-                                                };
-                                                List<CRM.Features.BankStatementDetails.BankStatementDetails> bankStatementDetails = new List<CRM.Features.BankStatementDetails.BankStatementDetails>();
-                                                foreach (MT940Transaction transaction in transactions)
-                                                {
-                                                    bankStatementDetails.Add(new CRM.Features.BankStatementDetails.BankStatementDetails
-                                                    {
-                                                        BankStatementId = bankStatement.BankStatementId,
-                                                        TransactionDate = transaction.Date,
-                                                        TransactionCode = transaction.Description.Substring(0, 2),
-                                                        Description = transaction.Description,
-                                                        Reference = transaction.Reference,
-                                                        Amount = transaction.Amount,
-                                                        Type = transaction.Type.Equals("C") ? TransactionType.Credit : TransactionType.Debit,
-                                                        BankStatement = bankStatement,
-                                                        CurrencyCode = transaction.CurrencyCode
-                                                    });
-                                                }
-                                                _unitOfWork.Repository<BankStatement>().Add(bankStatement);
-                                                _unitOfWork.Repository<CRM.Features.BankStatementDetails.BankStatementDetails>().Add(bankStatementDetails);
-                                                await _unitOfWork.SaveChangesAsync();
-                                                bankStatementDto.BankStatementId = bankStatement.BankStatementId;
-                                                return EntityResponse.CreateOk(bankStatementDto);
-                                            }
-                                            return EntityResponse.CreateOk("Sin transacciones");
+                                            return await SaveTransactions(ruta, bankConfiguraion, creationDate);
                                         }
+                                    }
+
+                                    if (!wasFound)
+                                    {
+                                        ruta = getFilePath(fileName, bankConfiguraion.LocalFileRoute);
+                                        return await SaveTransactions(ruta, bankConfiguraion, creationDate);
                                     }
                                 }
                             }
@@ -152,6 +135,93 @@ namespace CRM.Features.BankStatement
                 }
             }
             return EntityResponse.CreateOk();
+        }
+
+        public string getFilePath(string baseFileName, string serverPath)
+        {
+            string[] files = Directory.GetFiles(serverPath);
+
+            foreach (string file in files)
+            {
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
+
+                string fileNameTrimmed = fileNameWithoutExtension.Substring(0, 47).Trim();
+
+                if (fileNameTrimmed.Equals(baseFileName))
+                {
+                    return file;
+                }
+            }
+
+            return "";
+        }
+
+        static int calculateSimilarity(string str1, string str2)
+        {
+            int maxLength = Math.Max(str1.Length, str2.Length);
+            int minLength = Math.Min(str1.Length, str2.Length);
+            int commonChars = 0;
+
+            for (int i = 0; i < minLength; i++)
+            {
+                if (str1[i] == str2[i])
+                    commonChars++;
+            }
+
+            return (int)(((double)commonChars / maxLength) * 100);
+        }
+
+        public async Task<EntityResponse> SaveTransactions(string path, CRM.Features.BankConfiguration.BankConfiguration bankConfiguraion, DateTime creationDate)
+        {
+            BankStatementDto bankStatementDto = new BankStatementDto();
+            List<MT940Transaction> transactions = ReadMT940File(path);
+            if (transactions.Count > 0)
+            {
+                bankStatementDto.CompanyId = bankConfiguraion.CompanyId;
+                bankStatementDto.AccountId = bankConfiguraion.AccountId;
+                bankStatementDto.Account = transactions.FirstOrDefault().Account;
+                bankStatementDto.CreateDateTime = creationDate;
+                bankStatementDto.Description = $"Archivo {transactions.FirstOrDefault().Account} Fecha {transactions.FirstOrDefault().Date}";
+                bankStatementDto.Status = BankStatatementState.Pending;
+
+                if (bankStatementDto == null)
+                {
+                    return EntityResponse.CreateError("Los datos para crear estado de cuenta son obligatorios.");
+                }
+
+                BankStatement bankStatement = new BankStatement
+                {
+                    BankStatementId = bankStatementDto.BankStatementId,
+                    CompanyId = bankStatementDto.CompanyId,
+                    AccountId = bankStatementDto.AccountId,
+                    Account = bankStatementDto.Account,
+                    Description = bankStatementDto.Description,
+                    Status = BankStatatementState.Pending,
+                    CreateDateTime = bankStatementDto.CreateDateTime
+                };
+                List<CRM.Features.BankStatementDetails.BankStatementDetails> bankStatementDetails = new List<CRM.Features.BankStatementDetails.BankStatementDetails>();
+                foreach (MT940Transaction transaction in transactions)
+                {
+                    bankStatementDetails.Add(new CRM.Features.BankStatementDetails.BankStatementDetails
+                    {
+                        BankStatementId = bankStatement.BankStatementId,
+                        TransactionDate = transaction.Date,
+                        TransactionCode = transaction.Description.Substring(0, 2),
+                        Description = transaction.Description,
+                        Reference = transaction.Reference,
+                        Amount = transaction.Amount,
+                        Type = transaction.Type.Equals("C") ? TransactionType.Credit : TransactionType.Debit,
+                        BankStatement = bankStatement,
+                        CurrencyCode = transaction.CurrencyCode
+                    });
+                }
+                _unitOfWork.Repository<BankStatement>().Add(bankStatement);
+                _unitOfWork.Repository<CRM.Features.BankStatementDetails.BankStatementDetails>().Add(bankStatementDetails);
+                await _unitOfWork.SaveChangesAsync();
+                bankStatementDto.BankStatementId = bankStatement.BankStatementId;
+                return EntityResponse.CreateOk(bankStatementDto);
+            }
+            return EntityResponse.CreateOk("Sin transacciones");
         }
 
         public async Task<List<BankStatementDto>> GetAll()
@@ -248,6 +318,24 @@ namespace CRM.Features.BankStatement
                 reader.Close();
             }
             return transactions;
+        }
+
+        public async Task<EntityResponse> UpdateStatus(int bankStatementId, BankStatatementState status)
+        {
+            BankStatement bankStatement = _unitOfWork.Repository<BankStatement>().Query().Where(x => x.BankStatementId == bankStatementId).FirstOrDefault();
+            bankStatement.Status = status;
+
+            _unitOfWork.Repository<BankStatement>().Update(bankStatement);
+            await _unitOfWork.SaveChangesAsync();
+            return EntityResponse.CreateOk();
+        }
+
+        public async Task<EntityResponse> DeleteBankStatement(BankStatement bankStatement)
+        {
+            _unitOfWork.Repository<BankStatement>().Delete(bankStatement);
+            await _unitOfWork.SaveChangesAsync();
+
+            return EntityResponse.CreateOk();
         }
     }
 }
