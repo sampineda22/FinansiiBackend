@@ -114,11 +114,18 @@ namespace CRM.Features.BankStatement
                                                 List<CRM.Features.BankStatementDetails.BankStatementDetails> bankStatementDetails = new List<CRM.Features.BankStatementDetails.BankStatementDetails>();
                                                 foreach (MT940Transaction transaction in transactions)
                                                 {
+                                                    var interes = false;
+                                                    if (transaction.Description.Substring(0, 2).Equals("3Y"))
+                                                    {
+                                                        if (transaction.Description.Contains("INTERESES")) {
+                                                            interes = true;
+                                                        }
+                                                    }
                                                     bankStatementDetails.Add(new CRM.Features.BankStatementDetails.BankStatementDetails
                                                     {
                                                         BankStatementId = bankStatement.BankStatementId,
                                                         TransactionDate = transaction.Date,
-                                                        TransactionCode = transaction.Description.Substring(0, 2),
+                                                        TransactionCode = interes ? "4Y" : transaction.Description.Substring(0, 2),
                                                         Description = transaction.Description,
                                                         Reference = transaction.Reference,
                                                         Amount = transaction.Amount,
