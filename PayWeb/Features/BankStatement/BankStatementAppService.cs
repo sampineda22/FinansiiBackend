@@ -44,7 +44,7 @@ namespace CRM.Features.BankStatement
                 CompanyId = bankStatementDto.CompanyId,
                 AccountId = bankStatementDto.AccountId,
                 Account = bankStatementDto.Account,
-                Description = bankStatementDto.Description,
+                TransactionDate = bankStatementDto.TransactionDate,
                 Status = BankStatatementState.Pending,
                 CreateDateTime = bankStatementDto.CreateDateTime
             };
@@ -57,7 +57,7 @@ namespace CRM.Features.BankStatement
 
         public async Task<EntityResponse> ImportStatementFromFileByAccount(string accountId, string dateString, string companyCode)
         {
-            DateTime creationDate = DateTime.Now;
+            DateTime transactionDate = DateTime.Now;
             bool wasFound = false;
             string fileName, ruta;
 
@@ -65,14 +65,14 @@ namespace CRM.Features.BankStatement
             {
                 if(dateString.Replace(" ", "") != "")
                 {
-                    creationDate = DateTime.Parse(dateString);
-                    /*List<BankStatement> bankStatements = await GetByAccountId(accountId, dateString, companyCode);
+                    transactionDate= DateTime.Parse(dateString);
+                    List<BankStatement> bankStatements = await GetByAccountId(accountId, dateString, companyCode);
 
                     foreach (BankStatement bankStatement in bankStatements.FindAll(x => x.Status != BankStatatementState.Processed))
                     {
                         await _bankStatementDetailsAppService.DeleteDetails(bankStatement.BankStatementId);
                         await DeleteBankStatement(bankStatement);
-                    }*/
+                    }
                 }
             }
 
@@ -93,9 +93,9 @@ namespace CRM.Features.BankStatement
                         var files = client.ListDirectory(bankConfiguraion.FileRoute);
                         if (bankConfiguraion.Bank == Bank.BAC)
                         {
-                            string year = creationDate.Year.ToString();
-                            string month = creationDate.Month < 10 ? "0" + creationDate.Month.ToString() : creationDate.Month.ToString();
-                            string day = creationDate.Day < 10 ? "0" + creationDate.Day.ToString() : creationDate.Day.ToString();
+                            string year = transactionDate.Year.ToString();
+                            string month = transactionDate.Month < 10 ? "0" + transactionDate.Month.ToString() : transactionDate.Month.ToString();
+                            string day = transactionDate.Day < 10 ? "0" + transactionDate.Day.ToString() : transactionDate.Day.ToString();
                             string date = year + "-" + month + "-" + day;
                             fileName = (bankConfiguraion.FileName + bankConfiguraion.AccountNumber + '-' + date).Trim();
                             foreach (var file in files)
@@ -112,16 +112,16 @@ namespace CRM.Features.BankStatement
                                         {
                                             client.DownloadFile(file.FullName, fileStream);
                                             fileStream.Close();
-                                            return await SaveTransactions(ruta, bankConfiguraion, creationDate);
+                                            return await SaveTransactions(ruta, bankConfiguraion, transactionDate);
                                         }
                                     }
-
-                                    if (!wasFound)
-                                    {
-                                        ruta = getFilePath(fileName, bankConfiguraion.LocalFileRoute);
-                                        return await SaveTransactions(ruta, bankConfiguraion, creationDate);
-                                    }
                                 }
+                            }
+
+                            if (!wasFound)
+                            {
+                                ruta = getFilePath(fileName, bankConfiguraion.LocalFileRoute);
+                                return await SaveTransactions(ruta, bankConfiguraion, transactionDate);
                             }
                         }
                     }
@@ -156,22 +156,7 @@ namespace CRM.Features.BankStatement
             return "";
         }
 
-        static int calculateSimilarity(string str1, string str2)
-        {
-            int maxLength = Math.Max(str1.Length, str2.Length);
-            int minLength = Math.Min(str1.Length, str2.Length);
-            int commonChars = 0;
-
-            for (int i = 0; i < minLength; i++)
-            {
-                if (str1[i] == str2[i])
-                    commonChars++;
-            }
-
-            return (int)(((double)commonChars / maxLength) * 100);
-        }
-
-        public async Task<EntityResponse> SaveTransactions(string path, CRM.Features.BankConfiguration.BankConfiguration bankConfiguraion, DateTime creationDate)
+        public async Task<EntityResponse> SaveTransactions(string path, CRM.Features.BankConfiguration.BankConfiguration bankConfiguraion, DateTime transactionDate)
         {
             BankStatementDto bankStatementDto = new BankStatementDto();
             List<MT940Transaction> transactions = ReadMT940File(path);
@@ -180,8 +165,8 @@ namespace CRM.Features.BankStatement
                 bankStatementDto.CompanyId = bankConfiguraion.CompanyId;
                 bankStatementDto.AccountId = bankConfiguraion.AccountId;
                 bankStatementDto.Account = transactions.FirstOrDefault().Account;
-                bankStatementDto.CreateDateTime = creationDate;
-                bankStatementDto.Description = $"Archivo {transactions.FirstOrDefault().Account} Fecha {transactions.FirstOrDefault().Date}";
+                bankStatementDto.CreateDateTime = DateTime.Now;
+                bankStatementDto.TransactionDate = transactionDate;
                 bankStatementDto.Status = BankStatatementState.Pending;
 
                 if (bankStatementDto == null)
@@ -195,18 +180,27 @@ namespace CRM.Features.BankStatement
                     CompanyId = bankStatementDto.CompanyId,
                     AccountId = bankStatementDto.AccountId,
                     Account = bankStatementDto.Account,
-                    Description = bankStatementDto.Description,
+                    TransactionDate = bankStatementDto.TransactionDate,
                     Status = BankStatatementState.Pending,
                     CreateDateTime = bankStatementDto.CreateDateTime
                 };
                 List<CRM.Features.BankStatementDetails.BankStatementDetails> bankStatementDetails = new List<CRM.Features.BankStatementDetails.BankStatementDetails>();
                 foreach (MT940Transaction transaction in transactions)
                 {
+                    bool esInteres = false;
+                    if(transaction.Description.Substring(0, 2).Equals("3Y"))
+                    {
+                        if (transaction.Description.Contains("INTERESES"))
+                        {
+                            esInteres = true;
+                        }
+                    }
+
                     bankStatementDetails.Add(new CRM.Features.BankStatementDetails.BankStatementDetails
                     {
                         BankStatementId = bankStatement.BankStatementId,
                         TransactionDate = transaction.Date,
-                        TransactionCode = transaction.Description.Substring(0, 2),
+                        TransactionCode = esInteres ? "4Y" : transaction.Description.Substring(0, 2),
                         Description = transaction.Description,
                         Reference = transaction.Reference,
                         Amount = transaction.Amount,
@@ -233,7 +227,7 @@ namespace CRM.Features.BankStatement
                                                                 CompanyId = u.CompanyId,
                                                                 AccountId = u.AccountId,
                                                                 Account = u.Account,
-                                                                Description = u.Description,
+                                                                TransactionDate = u.TransactionDate,
                                                                 CreateDateTime = u.CreateDateTime,
                                                                 Status = u.Status
                                                             }).ToListAsync();
@@ -245,9 +239,9 @@ namespace CRM.Features.BankStatement
             DateTime transferDate = DateTime.Parse(date);
 
             List<BankStatement> bankStatements = _unitOfWork.Repository<BankStatement>().Query().Where(x => x.AccountId == accountId && 
-                                                                                                            x.CreateDateTime.Year == transferDate.Year &&
-                                                                                                            x.CreateDateTime.Month == transferDate.Month &&
-                                                                                                            x.CreateDateTime.Date == transferDate.Date &&
+                                                                                                            x.TransactionDate.Year == transferDate.Year &&
+                                                                                                            x.TransactionDate.Month == transferDate.Month &&
+                                                                                                            x.TransactionDate.Date == transferDate.Date &&
                                                                                                             x.CompanyId == companyCode).ToList();
             return bankStatements;
         }
@@ -262,7 +256,7 @@ namespace CRM.Features.BankStatement
                         CompanyId = u.CompanyId,
                         AccountId = u.AccountId,
                         Account = u.Account,
-                        Description = u.Description,
+                        TransactionDate = u.TransactionDate,
                         CreateDateTime = u.CreateDateTime,
                         Status = u.Status,
                     }).FirstOrDefault();
@@ -311,7 +305,8 @@ namespace CRM.Features.BankStatement
                     {
                         if (currentTransaction != null)
                         {
-                            currentTransaction.Description = line.Substring(4); 
+                            currentTransaction.Description = line.Substring(4);
+                            currentTransaction = null;
                         }
                     }
                 }

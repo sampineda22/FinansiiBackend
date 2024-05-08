@@ -102,7 +102,7 @@ namespace CRM.Features.BankStatementServiceAX
         private EndpointAddress GetEndpointAddr()
         {
 
-            string url = "net.tcp://gim-dev-AOS:8201/DynamicsAx/Services/IM_BankStatementGP";
+            string url = "net.tcp://gim-pro3-AOS:8201/DynamicsAx/Services/IM_BankStatementGP";
             string user = "sqladmin@intermoda.com.hn";
 
             var uri = new Uri(url);

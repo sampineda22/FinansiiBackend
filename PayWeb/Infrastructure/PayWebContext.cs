@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using PayWeb.Infrastructure.Maps;
+﻿using CRM.Infrastructure.Maps.Admin;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;

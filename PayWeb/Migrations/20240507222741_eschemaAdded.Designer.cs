@@ -4,14 +4,16 @@ using CRM.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CRM.Migrations
 {
     [DbContext(typeof(IMFinanzasContext))]
-    partial class IMFinanzasContextModelSnapshot : ModelSnapshot
+    [Migration("20240507222741_eschemaAdded")]
+    partial class eschemaAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,7 +56,7 @@ namespace CRM.Migrations
 
                     b.HasKey("RoleId", "CompanyCode");
 
-                    b.ToTable("Roles", "Finansii.Admin");
+                    b.ToTable("Roles", "Admin");
                 });
 
             modelBuilder.Entity("CRM.Features.BankConfiguration.BankConfiguration", b =>
@@ -231,7 +233,7 @@ namespace CRM.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("User", "Finansii.Admin");
+                    b.ToTable("User", "Finansii");
                 });
 
             modelBuilder.Entity("CRM.Features.BankStatementDetails.BankStatementDetails", b =>

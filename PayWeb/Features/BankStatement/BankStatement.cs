@@ -12,7 +12,7 @@ namespace CRM.Features.BankStatement
         public string CompanyId { get; set; }
         public string AccountId { get; set; }
         public string Account { get; set; }
-        public string Description { get; set; }
+        public DateTime TransactionDate { get; set; }
         public DateTime CreateDateTime { get; set; }
         public BankStatatementState Status { get; set; }
     }

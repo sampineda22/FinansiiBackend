@@ -12,7 +12,7 @@ namespace CRM.Infrastructure.Maps
     {
         public void Configure(EntityTypeBuilder<BankStatementDetails> builder)
         {
-            builder.ToTable("BankStatementDetails");
+            builder.ToTable("BankStatementDetails", "Finansii");
             builder.HasKey(e => e.BankStatementDetailId);
             builder.Property(e => e.CurrencyCode).HasMaxLength(5);
             builder.Property(e => e.TransactionCode).HasMaxLength(10).IsRequired();
