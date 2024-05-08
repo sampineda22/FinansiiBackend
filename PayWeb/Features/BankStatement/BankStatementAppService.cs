@@ -112,6 +112,7 @@ namespace CRM.Features.BankStatement
                                         {
                                             client.DownloadFile(file.FullName, fileStream);
                                             fileStream.Close();
+
                                             return await SaveTransactions(ruta, bankConfiguraion, transactionDate);
                                         }
                                     }
