@@ -112,7 +112,7 @@ namespace CRM.Features.BankStatement
                                         {
                                             client.DownloadFile(file.FullName, fileStream);
                                             fileStream.Close();
-                                            return await SaveTransactions(ruta, bankConfiguraion, transactionDate);
+                                            return await SaveTransactions(ruta, bankConfiguraion);
                                         }
                                     }
                                 }
@@ -121,7 +121,7 @@ namespace CRM.Features.BankStatement
                             if (!wasFound)
                             {
                                 ruta = getFilePath(fileName, bankConfiguraion.LocalFileRoute);
-                                return await SaveTransactions(ruta, bankConfiguraion, transactionDate);
+                                return await SaveTransactions(ruta, bankConfiguraion);
                             }
                         }
                     }
@@ -156,7 +156,7 @@ namespace CRM.Features.BankStatement
             return "";
         }
 
-        public async Task<EntityResponse> SaveTransactions(string path, CRM.Features.BankConfiguration.BankConfiguration bankConfiguraion, DateTime transactionDate)
+        public async Task<EntityResponse> SaveTransactions(string path, CRM.Features.BankConfiguration.BankConfiguration bankConfiguraion)
         {
             BankStatementDto bankStatementDto = new BankStatementDto();
             List<MT940Transaction> transactions = ReadMT940File(path);
@@ -166,7 +166,7 @@ namespace CRM.Features.BankStatement
                 bankStatementDto.AccountId = bankConfiguraion.AccountId;
                 bankStatementDto.Account = transactions.FirstOrDefault().Account;
                 bankStatementDto.CreateDateTime = DateTime.Now;
-                bankStatementDto.TransactionDate = transactionDate;
+                bankStatementDto.TransactionDate = transactions[0].Date;
                 bankStatementDto.Status = BankStatatementState.Pending;
 
                 if (bankStatementDto == null)

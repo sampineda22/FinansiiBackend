@@ -42,7 +42,7 @@ namespace PayWeb.Features.Security
                 return BadRequest();
             }
 
-            if (!_userService.IsValidUserCredentials(request.User, request.Password))
+            if (!_userService.IsValidUserCredentials(request.User.ToLower(), request.Password))
             {
                 return Unauthorized();
             }
