@@ -6,13 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CRM.Infrastructure.Maps.Admin
+namespace PayWeb.Infrastructure.Maps
 {
     public class UserMap : IEntityTypeConfiguration<User>
     {
         public void Configure(EntityTypeBuilder<User> builder)
         {
-            builder.ToTable("User", "Finansii");
+            builder.ToTable("User");
             builder.HasKey(e => e.Id);
             builder.Property(e => e.UserId).HasColumnName("UserId")
                                                 .HasMaxLength(100);

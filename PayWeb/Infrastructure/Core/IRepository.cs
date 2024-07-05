@@ -11,7 +11,7 @@ namespace PayWeb.Infrastructure.Core
         IQueryable<T> Query();
         void Add(T entity);
         void Add(IEnumerable<T> entities);
-        List<T> GetSP<T>(string query, SqlParameter[] paramsArray) where T : class, new();
+        List<T> GetSP<T>(string query, SqlParameter[] paramsArray, int commandTimeout = 100) where T : class, new();
         int ExecuteSP(string query, SqlParameter[] paramsArray);
         //Ver despues
         int ExecuteSPT(string query, SqlParameter parameter);

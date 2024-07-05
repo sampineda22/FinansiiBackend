@@ -4,14 +4,16 @@ using CRM.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CRM.Migrations
 {
     [DbContext(typeof(IMFinanzasContext))]
-    partial class IMFinanzasContextModelSnapshot : ModelSnapshot
+    [Migration("20240624211954_UserHomologationModifKey")]
+    partial class UserHomologationModifKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -73,9 +75,6 @@ namespace CRM.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("ActiveState")
-                        .HasColumnType("bit");
 
                     b.Property<int>("Bank")
                         .HasColumnType("int");

@@ -28,68 +28,84 @@ namespace CRM.Features.BankStatementServiceAX
             _bankStatementAppService = bankStatementAppService;
         }
 
-        public async Task<EntityResponse> SendBankStatement(int BankStatementID)
+        public async Task<EntityResponse> SendBankStatement(string bankStatements)
         {
-            BANKSTATEMENTHEAD HEADER = new BANKSTATEMENTHEAD();
-            List<BANKSTATEMENTLINES> LIST = new List<BANKSTATEMENTLINES>();
+            List<int> bankStatementsIds = bankStatements.Split(',').Select(int.Parse).ToList();
+            List<string> responses = new();
+            List<string> errors = new();
 
-            SqlParameter[] parameters =
+            foreach (int BankStatementID in bankStatementsIds)
             {
-                new SqlParameter("@BankStatementId",BankStatementID)
-            };
+                BANKSTATEMENTHEAD HEADER = new BANKSTATEMENTHEAD();
+                List<BANKSTATEMENTLINES> LIST = new List<BANKSTATEMENTLINES>();
 
-            var data =_unitOfWork.Repository<BankStatementServiceAX>().GetSP<BankStatementServiceAX>("IM_GetBankstatementLines",parameters).ToList();
-            string TransactionCodeNull = "";
-            data.ForEach(element =>
-            {
-                BANKSTATEMENTLINES LINE = new BANKSTATEMENTLINES();
-                LINE.JOURNALNAMEID = element.JOURNALNAMEID;
-                LINE.CURRENCYCODE = element.CURRENCYCODE;
-                LINE.LEDGERJOURNALTRANSTXT = element.LEDGERJOURNALTRANSTXT;
-                LINE.AMOUNTCURDEBIT = element.AMOUNTCURDEBIT;
-                LINE.AMOUNTCURCREDIT = element.AMOUNTCURCREDIT;
-                LINE.ACCOUNTNUM = element.ACCOUNTNUM;
-                LINE.PAYMREFERENCE = element.PAYMREFERENCE;
-                LINE.TRANSDATE = element.TRANSDATE.Day + "/"+element.TRANSDATE.Month+"/"+element.TRANSDATE.Year;
-                LIST.Add(LINE);
-                if (LINE.JOURNALNAMEID == null)
+                SqlParameter[] parameters =
                 {
-                    TransactionCodeNull += (TransactionCodeNull != "" ? "," : "") +element.TransactionCode;
+                  new SqlParameter("@BankStatementId",BankStatementID)
+                };
+
+                BankStatement.BankStatement bankStatement = _unitOfWork.Repository<BankStatement.BankStatement>().Query().Where(x => x.BankStatementId == BankStatementID).FirstOrDefault();
+
+                var data = _unitOfWork.Repository<BankStatementServiceAX>().GetSP<BankStatementServiceAX>("IM_GetBankstatementLines", parameters).ToList();
+                string TransactionCodeNull = "";
+                data.ForEach(element =>
+                {
+                    BANKSTATEMENTLINES LINE = new BANKSTATEMENTLINES();
+                    LINE.JOURNALNAMEID = element.JOURNALNAMEID;
+                    LINE.CURRENCYCODE = element.CURRENCYCODE;
+                    LINE.LEDGERJOURNALTRANSTXT = element.LEDGERJOURNALTRANSTXT;
+                    LINE.AMOUNTCURDEBIT = element.AMOUNTCURDEBIT;
+                    LINE.AMOUNTCURCREDIT = element.AMOUNTCURCREDIT;
+                    LINE.ACCOUNTNUM = element.ACCOUNTNUM;
+                    LINE.PAYMREFERENCE = element.PAYMREFERENCE;
+                    LINE.TRANSDATE = element.TRANSDATE.Day + "/" + element.TRANSDATE.Month + "/" + element.TRANSDATE.Year;
+                    LIST.Add(LINE);
+                    if (LINE.JOURNALNAMEID == null)
+                    {
+                        TransactionCodeNull += (TransactionCodeNull != "" ? "," : "") + element.TransactionCode;
+                    }
+                });
+
+                if (TransactionCodeNull != "")
+                {
+                    errors.Add($"Transacciones no configuradas para la cuenta {bankStatement.AccountId}: {TransactionCodeNull}");
+                    break;
                 }
-            });
 
-            if(TransactionCodeNull != "")
-            {
-                return EntityResponse.CreateError("Transacciones no configuradas: " + TransactionCodeNull);
+                HEADER.LINES = LIST.ToArray();
+
+                string BankStatementLines = SerializationService.Serialize(HEADER);
+                ServiceReference1.CallContext context = new ServiceReference1.CallContext { Company = data[0].CompanyId };
+                var serviceClient = new M_BankStatementClient(GetBinding(), GetEndpointAddr());
+
+                serviceClient.ClientCredentials.Windows.ClientCredential.UserName = "servicio_ax";
+                serviceClient.ClientCredentials.Windows.ClientCredential.Password = "Int3r-M0d@.aX$3Rv";
+
+                try
+                {
+                    string dataValidation = string.Format("<INTEGRATION><COMPANY><CODE>{0}</CODE><USER>{1}</USER></COMPANY></INTEGRATION>", context.Company, "servicio_ax");
+                    IM_BankStatementInitRequest request = new IM_BankStatementInitRequest();
+                    request.CallContext = context;
+                    request._dataValidationXML = dataValidation;
+                    request._lineXML = BankStatementLines;
+                    var resp = serviceClient.initAsync(request);
+
+                    await _bankStatementAppService.UpdateStatus(BankStatementID, Infrastructure.Enum.BankStatementStatus.BankStatatementState.Processed);
+                    responses.Add($"{bankStatement.AccountId}: {resp.Result.response}.");
+                }
+                catch (Exception ex)
+                {
+                    return EntityResponse.CreateError(ex.ToString());
+                }
             }
 
-            HEADER.LINES = LIST.ToArray();
-
-            string BankStatementLines = SerializationService.Serialize(HEADER);
-            ServiceReference1.CallContext context = new ServiceReference1.CallContext { Company = data[0].CompanyId };
-            var serviceClient = new M_BankStatementClient(GetBinding(),GetEndpointAddr());
-
-            serviceClient.ClientCredentials.Windows.ClientCredential.UserName = "servicio_ax";
-            serviceClient.ClientCredentials.Windows.ClientCredential.Password = "Int3r-M0d@.aX$3Rv";
-
-            try
+            if(errors.Count > 0)
             {
-                string dataValidation = string.Format("<INTEGRATION><COMPANY><CODE>{0}</CODE><USER>{1}</USER></COMPANY></INTEGRATION>", context.Company, "servicio_ax");
-                IM_BankStatementInitRequest request = new IM_BankStatementInitRequest();
-                request.CallContext = context;
-                request._dataValidationXML = dataValidation;
-                request._lineXML = BankStatementLines;
-                var resp = serviceClient.initAsync(request);
-
-                await _bankStatementAppService.UpdateStatus(BankStatementID, Infrastructure.Enum.BankStatementStatus.BankStatatementState.Processed);
-
-                return EntityResponse.CreateOk(resp.Result.response);
-            }
-            catch (Exception ex)
-            {
-                return  EntityResponse.CreateError(ex.ToString());
+                string message = responses.Count > 0 ? $"Diarios creados: {String.Join(" ", responses)} Errores encontrados: {String.Join(" ", errors)}" : String.Join(" ", errors);
+                return EntityResponse.CreateError(message);
             }
 
+            return EntityResponse.CreateOk(String.Join(" ", responses));
         }
         private NetTcpBinding GetBinding()
         {
@@ -101,8 +117,8 @@ namespace CRM.Features.BankStatementServiceAX
         }
         private EndpointAddress GetEndpointAddr()
         {
-
-            string url = "net.tcp://gim-pro3-AOS:8201/DynamicsAx/Services/IM_BankStatementGP";
+            //string url = "net.tcp://gim-pro3-AOS:8201/DynamicsAx/Services/IM_BankStatementGP";
+            string url = "net.tcp://gim-dev-aos:8201/DynamicsAx/Services/IM_BankStatementGP";
             string user = "sqladmin@intermoda.com.hn";
 
             var uri = new Uri(url);
@@ -111,6 +127,5 @@ namespace CRM.Features.BankStatementServiceAX
             var endpointAddr = new EndpointAddress(uri, addrHdrs); //, epid, addrHdrs);
             return endpointAddr;
         }
-
     }
 }

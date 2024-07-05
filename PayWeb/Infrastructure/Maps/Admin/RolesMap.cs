@@ -8,7 +8,7 @@ namespace CRM.Infrastructure.Maps.Admin
     {
         public void Configure(EntityTypeBuilder<Role> builder)
         {
-            builder.ToTable("Roles", "Finansii.Admin");
+            builder.ToTable("Roles", "Finansii");
             builder.HasKey(e => new { e.RoleId, e.CompanyCode });
             builder.Property(e => e.RoleId).IsRequired().HasColumnType("int").UseIdentityColumn();
             builder.Property(e => e.CompanyCode).IsRequired().HasColumnType("varchar").HasMaxLength(4);

@@ -5,8 +5,11 @@ using CRM.Features.BankConfiguration;
 using CRM.Features.BankStatement;
 using CRM.Features.BankStatementDetails;
 using CRM.Features.BankStatementServiceAX;
+using CRM.Features.Credits.ReceiptBreakdown;
+using CRM.Features.Credits.ReceiptBreakdownReport;
 using CRM.Features.HostToHostBanPais;
 using CRM.Infrastructure;
+using CRM.Infrastructure.Core;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -115,6 +118,9 @@ namespace PayWeb
                 o.UseSqlServer(Configuration.GetConnectionString("IMFinanzas"));
             });
 
+            services.AddDbContext<PayrollContext>(o =>
+                o.UseSqlServer(Configuration.GetConnectionString("Payroll")));
+
             services.AddScoped<IUnitOfWorkPayWeb, UnitOfWorkPayWeb>(s => {
                 DbContext db = s.GetService<PayWebContext>();
                 return new UnitOfWorkPayWeb(db);
@@ -125,6 +131,11 @@ namespace PayWeb
                 return new UnitOfWork(db);
             });
 
+            services.AddScoped<IUnitOfWorkPayroll, UnitOfWorkPayroll>(s => {
+                DbContext db = s.GetService<PayrollContext>();
+                return new UnitOfWorkPayroll(db);
+            });
+
             services.AddScoped<UserAppService>();
             services.AddScoped<RolesService>();
             services.AddScoped<BankStatementAppService>();
@@ -132,6 +143,8 @@ namespace PayWeb
             services.AddScoped<BankConfigurationAppService>();
             services.AddScoped<HostToHostBanPaisServices>();
             services.AddScoped<BanskStatementServiceAXService>();
+            services.AddScoped<WorkpaperReportService>();
+            services.AddScoped<ReceiptDetailBreakdownService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -140,9 +153,7 @@ namespace PayWeb
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-            }
-            app.UseCors(CorsOrigins);
-           
+            }           
 
             app.UseHttpsRedirection();
 
@@ -154,6 +165,8 @@ namespace PayWeb
             });
 
             app.UseRouting();
+            app.UseCors(CorsOrigins);
+
             app.UseAuthentication();
             app.UseAuthorization();
 

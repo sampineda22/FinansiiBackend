@@ -4,14 +4,16 @@ using CRM.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CRM.Migrations
 {
     [DbContext(typeof(IMFinanzasContext))]
-    partial class IMFinanzasContextModelSnapshot : ModelSnapshot
+    [Migration("20240607213236_RoutePathsTable")]
+    partial class RoutePathsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -73,9 +75,6 @@ namespace CRM.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("ActiveState")
-                        .HasColumnType("bit");
 
                     b.Property<int>("Bank")
                         .HasColumnType("int");
@@ -203,27 +202,22 @@ namespace CRM.Migrations
                     b.ToTable("BankStatementDetails", "Finansii");
                 });
 
-            modelBuilder.Entity("CRM.Infrastructure.Users.UserHomologation", b =>
+            modelBuilder.Entity("CRM.Infrastructure.Users.AX_PayWebUsers", b =>
                 {
                     b.Property<string>("PersonalCode")
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<string>("CompanyCode")
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
                     b.Property<string>("AXCode")
                         .HasMaxLength(12)
                         .HasColumnType("nvarchar(12)");
 
-                    b.Property<string>("CRMCode")
-                        .HasMaxLength(12)
-                        .HasColumnType("nvarchar(12)");
+                    b.Property<string>("CompanyCode")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("PersonalCode", "CompanyCode");
+                    b.HasKey("PersonalCode", "AXCode");
 
-                    b.ToTable("UsersHomologation", "Finansii");
+                    b.ToTable("AX_PayWebUsers", "Finansii");
                 });
 
             modelBuilder.Entity("CRM.Models.General.RoutePath", b =>

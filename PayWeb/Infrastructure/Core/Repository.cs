@@ -25,7 +25,7 @@ namespace PayWeb.Infrastructure.Core
             dbContext.Set<T>().AddRange(entities);
         }
 
-        public List<T> GetSP<T>(string query, SqlParameter[] paramsArray) where T : class, new()
+        public List<T> GetSP<T>(string query, SqlParameter[] paramsArray, int commandTimeout = 100) where T : class, new()
         {
             var result = new List<T>();
             dbContext.Database.OpenConnection();
@@ -33,6 +33,7 @@ namespace PayWeb.Infrastructure.Core
             command.CommandText = query;
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.AddRange(paramsArray);
+            command.CommandTimeout = commandTimeout;
 
             using (var reader = command.ExecuteReader())
             {

@@ -77,10 +77,14 @@ namespace CRM.Features.BankStatement
             return Ok(response);
         }
 
-        [HttpGet("ImportStatementFromFileByAccountId/{accountId}/{date}/{companyCode}")]
-        public async Task<IActionResult> ImportStatementFromFileByAccountId(string accountId, string date, string companyCode)
+        [HttpGet("ImportStatementFromFileByAccountId/{accounts}/{companyCode}/{date}")]
+        public async Task<IActionResult> ImportStatementFromFileByAccountId(string accounts, string companyCode, string date)
         {
-            var response = await _bankStatementAppService.ImportStatementFromFileByAccount(accountId, date, companyCode);
+            EntityResponse response = await _bankStatementAppService.ImportStatementFromFileByAccount(accounts, date, companyCode);
+            if (!response.Ok)
+            {
+                return BadRequest(response);
+            }
             return Ok(response);
         }
     }
