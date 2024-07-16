@@ -1,4 +1,4 @@
-﻿using CRM.Features.BankStatement;
+﻿using CRM.Features.Accounting.BankStatement;
 using Microsoft.EntityFrameworkCore;
 using PayWeb.Common;
 using PayWeb.Infrastructure.Core;

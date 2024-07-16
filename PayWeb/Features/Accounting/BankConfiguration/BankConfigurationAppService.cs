@@ -7,7 +7,7 @@ using System.ComponentModel.Design;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CRM.Features.BankConfiguration
+namespace CRM.Features.Accounting.BankConfiguration
 {
     public class BankConfigurationAppService
     {
@@ -15,7 +15,7 @@ namespace CRM.Features.BankConfiguration
 
         public BankConfigurationAppService(IUnitOfWork unitOfWork)
         {
-            this._unitOfWork = unitOfWork;
+            _unitOfWork = unitOfWork;
         }
         public async Task<EntityResponse> AddBankConfigurationAsync(BankConfigurationDto bankConfigurationDto)
         {
@@ -46,22 +46,23 @@ namespace CRM.Features.BankConfiguration
         }
         public async Task<List<BankConfigurationDto>> GetAll(string companyCode)
         {
-            List<BankConfigurationDto> bankConfigurations = await (from u in _unitOfWork.Repository<BankConfiguration>().Query() where u.CompanyId == companyCode
+            List<BankConfigurationDto> bankConfigurations = await (from u in _unitOfWork.Repository<BankConfiguration>().Query()
+                                                                   where u.CompanyId == companyCode
                                                                    select new BankConfigurationDto
-                                                           {
-                                                               BankConfigurationId = u.BankConfigurationId,
-                                                               CompanyId = u.CompanyId,
-                                                               Bank = u.Bank,
-                                                               AccountId = u.AccountId,
-                                                               AccountNumber = u.AccountNumber,
-                                                               Host = u.Host,
-                                                               Port = u.Port,
-                                                               UserName = u.UserName,
-                                                               Password = u.Password,
-                                                               FileRoute = u.FileRoute,
-                                                               LocalFileRoute = u.LocalFileRoute,
-                                                               FileName = u.FileName
-                                                           }).ToListAsync();
+                                                                   {
+                                                                       BankConfigurationId = u.BankConfigurationId,
+                                                                       CompanyId = u.CompanyId,
+                                                                       Bank = u.Bank,
+                                                                       AccountId = u.AccountId,
+                                                                       AccountNumber = u.AccountNumber,
+                                                                       Host = u.Host,
+                                                                       Port = u.Port,
+                                                                       UserName = u.UserName,
+                                                                       Password = u.Password,
+                                                                       FileRoute = u.FileRoute,
+                                                                       LocalFileRoute = u.LocalFileRoute,
+                                                                       FileName = u.FileName
+                                                                   }).ToListAsync();
             return bankConfigurations;
         }
         public BankConfigurationDto FindById(int id)

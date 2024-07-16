@@ -7,12 +7,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using RouteAttribute = Microsoft.AspNetCore.Components.RouteAttribute;
 
-namespace CRM.Features.BankStatementServiceAX
+namespace CRM.Features.Accounting.BankStatementServiceAX
 {
     [Route("[Controller]")]
     [ApiController]
     [Authorize]
-    public class BankStatementServiceAXController: ControllerBase
+    public class BankStatementServiceAXController : ControllerBase
     {
         private readonly BanskStatementServiceAXService _banskStatementServiceAXService;
 

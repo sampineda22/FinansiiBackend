@@ -133,15 +133,15 @@ namespace CRM.Features.Credits.ReceiptBreakdownReport
                             targetWorksheet.Cells[$"I{tableRow}"].Value = detail.CurrencyCode;
                             targetWorksheet.Cells[$"J{tableRow}"].Value = detail.ReceiptAmountInCurrency;
                             targetWorksheet.Cells[$"K{tableRow}"].Value = detail.ReceiptAmount;
-                            targetWorksheet.Cells[$"L{tableRow}"].Value = detail.CancelledReceiptAmount;
-                            targetWorksheet.Cells[$"M{tableRow}"].Value = detail.PaymentMethod;
-                            targetWorksheet.Cells[$"N{tableRow}"].Value = detail.CashAmount;
-                            targetWorksheet.Cells[$"O{tableRow}"].Value = detail.TransferAmount;
-                            targetWorksheet.Cells[$"P{tableRow}"].Value = detail.DeductedAmount;
-                            targetWorksheet.Cells[$"Q{tableRow}"].Value = detail.CheckAmount;
-                            targetWorksheet.Cells[$"R{tableRow}"].Value = detail.PostdatedCheckAmount;
-                            targetWorksheet.Cells[$"S{tableRow}"].Value = detail.CheckDueDate == null ? "" : Convert.ToDateTime(detail.CheckDueDate);
-                            targetWorksheet.Cells[$"T{tableRow}"].Value = detail.BankName;
+                            //targetWorksheet.Cells[$""].Value = detail.CancelledReceiptAmount;
+                            targetWorksheet.Cells[$"L{tableRow}"].Value = detail.PaymentMethod;
+                            targetWorksheet.Cells[$"M{tableRow}"].Value = detail.CashAmount;
+                            targetWorksheet.Cells[$"N{tableRow}"].Value = detail.TransferAmount;
+                            targetWorksheet.Cells[$"O{tableRow}"].Value = detail.DeductedAmount;
+                            targetWorksheet.Cells[$"P{tableRow}"].Value = detail.CheckAmount;
+                            targetWorksheet.Cells[$"Q{tableRow}"].Value = detail.PostdatedCheckAmount;
+                            targetWorksheet.Cells[$"R{tableRow}"].Value = detail.CheckDueDate == null || detail.CheckDueDate == "" ? "" : Convert.ToDateTime(detail.CheckDueDate);
+                            targetWorksheet.Cells[$"S{tableRow}"].Value = detail.BankName;
 
                             tableRow++;
                             targetWorksheet.InsertRow(tableRow, 1);

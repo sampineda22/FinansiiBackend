@@ -9,7 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using OfficeOpenXml;
 
-namespace CRM.Features.HostToHostBanPais
+namespace CRM.Features.Accounting.HostToHostBanPais
 {
     public class HostToHostBanPaisServices
     {

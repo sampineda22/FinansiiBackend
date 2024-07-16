@@ -16,7 +16,7 @@ namespace CRM.Features.Credits.WorkpaperReport
         public string CurrencyCode { get; set; }
         public decimal ReceiptAmountInCurrency { get; set; }
         public decimal ReceiptAmount { get; set; }
-        public decimal CancelledReceiptAmount { get; set; }
+        //public decimal CancelledReceiptAmount { get; set; }
         public string PaymentMethod { get; set; }
         public decimal CashAmount { get; set; }
         public decimal TransferAmount { get; set; }

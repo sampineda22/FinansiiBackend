@@ -1,4 +1,4 @@
-﻿using CRM.Features.BankConfiguration;
+﻿using CRM.Features.Accounting.BankConfiguration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;

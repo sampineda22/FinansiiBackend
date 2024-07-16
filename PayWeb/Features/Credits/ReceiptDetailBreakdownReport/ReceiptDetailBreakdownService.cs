@@ -1,4 +1,4 @@
-﻿using CRM.Features.BankStatementDetails;
+﻿using CRM.Features.Accounting.BankStatementDetails;
 using CRM.Features.Credits.ReceiptBreakdownReport;
 using CRM.Infrastructure.Core;
 using PayWeb.Common;
@@ -179,7 +179,7 @@ namespace CRM.Features.Credits.ReceiptBreakdown
                         newAddress = new ExcelAddressBase(table.Address.Start.Row, table.Address.Start.Column, advanceTableRow, table.Address.End.Column);
                         typeof(ExcelTable).GetProperty("Address").SetValue(table, newAddress);
 
-                        var receipts = receiptDetailBreakdown.Select(e => e.ReceiptNumber).Distinct();
+                        var receipts = receiptDetailBreakdown.Select(e => e.ReceiptNumber.Replace(" ","")).Distinct();
                         string documentsNum = string.Join(",", receipts);
 
                         parameters = new SqlParameter[]
@@ -188,7 +188,7 @@ namespace CRM.Features.Credits.ReceiptBreakdown
                             new SqlParameter("@DataAreaId", companyCode)
                         };
                         List<JournalLine> journalLines = _unitOfWork.Repository<JournalLine>().GetSP<JournalLine>("[Finansii].[GetJournalsByDocumentNum]", parameters).ToList();
-
+                        
                         targetWorksheet.Cells[$"C{advanceTableRow + spaceBetweenSignature}"].Value = journalLines.Count <= 0 ? "" : string.Join(", ", journalLines.Select(x => x.ModifiedBy).Distinct());
 
                         package.Save();

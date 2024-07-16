@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using static CRM.Infrastructure.Enum.TransactionsType;
 
-namespace CRM.Features.BankStatementDetails
+namespace CRM.Features.Accounting.BankStatementDetails
 {
-    public class BankStatementDetailsDto
+    public class BankStatementDetails
     {
         public int BankStatementDetailId { get; set; }
         public int BankStatementId { get; set; }
@@ -17,5 +17,6 @@ namespace CRM.Features.BankStatementDetails
         public string Reference { get; set; }
         public decimal Amount { get; set; }
         public TransactionType Type { get; set; }
+        public virtual BankStatement.BankStatement BankStatement { get; set; }
     }
 }

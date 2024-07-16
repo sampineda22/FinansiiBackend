@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using static CRM.Infrastructure.Enum.TransactionsType;
 
-namespace CRM.Features.BankStatementDetails
+namespace CRM.Features.Accounting.BankStatementDetails
 {
     public class BankStatementDetailsAppService
     {
@@ -15,7 +15,7 @@ namespace CRM.Features.BankStatementDetails
 
         public BankStatementDetailsAppService(IUnitOfWork unitOfWork)
         {
-            this._unitOfWork = unitOfWork;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<EntityResponse> AddBankStatementDetailsAsync(BankStatementDetailsDto bankStatementDetailsDto)
@@ -47,18 +47,18 @@ namespace CRM.Features.BankStatementDetails
         public async Task<List<BankStatementDetailsDto>> GetAll()
         {
             List<BankStatementDetailsDto> bankStatementsDetails = await (from u in _unitOfWork.Repository<BankStatementDetails>().Query()
-                                                           select new BankStatementDetailsDto
-                                                           {
-                                                               BankStatementDetailId = u.BankStatementDetailId,
-                                                               BankStatementId = u.BankStatementId,
-                                                               CurrencyCode = u.CurrencyCode,
-                                                               TransactionDate = u.TransactionDate,
-                                                               TransactionCode = u.TransactionCode,
-                                                               Description = u.Description,
-                                                               Reference = u.Reference,
-                                                               Amount = u.Amount,
-                                                               Type = u.Type
-                                                           }).ToListAsync();
+                                                                         select new BankStatementDetailsDto
+                                                                         {
+                                                                             BankStatementDetailId = u.BankStatementDetailId,
+                                                                             BankStatementId = u.BankStatementId,
+                                                                             CurrencyCode = u.CurrencyCode,
+                                                                             TransactionDate = u.TransactionDate,
+                                                                             TransactionCode = u.TransactionCode,
+                                                                             Description = u.Description,
+                                                                             Reference = u.Reference,
+                                                                             Amount = u.Amount,
+                                                                             Type = u.Type
+                                                                         }).ToListAsync();
             return bankStatementsDetails;
         }
 

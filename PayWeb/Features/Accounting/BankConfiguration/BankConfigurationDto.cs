@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using static CRM.Infrastructure.Enum.Banks;
 
-namespace CRM.Features.BankConfiguration
+namespace CRM.Features.Accounting.BankConfiguration
 {
-    public class BankConfiguration
+    public class BankConfigurationDto
     {
         public int BankConfigurationId { get; set; }
         public string CompanyId { get; set; }
@@ -20,6 +20,5 @@ namespace CRM.Features.BankConfiguration
         public string FileRoute { get; set; }
         public string LocalFileRoute { get; set; }
         public string FileName { get; set; }
-        public bool ActiveState { get; set; }
     }
 }

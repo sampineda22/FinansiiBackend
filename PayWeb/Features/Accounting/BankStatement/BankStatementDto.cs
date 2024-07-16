@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using static CRM.Infrastructure.Enum.BankStatementStatus;
 
-namespace CRM.Features.BankStatement
+namespace CRM.Features.Accounting.BankStatement
 {
     public class BankStatementDto
     {

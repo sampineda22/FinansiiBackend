@@ -13,11 +13,11 @@ using ServiceReference1;
 using System.ServiceModel;
 using System;
 using System.ServiceModel.Channels;
-using CRM.Features.BankStatement;
+using CRM.Features.Accounting.BankStatement;
 
-namespace CRM.Features.BankStatementServiceAX
+namespace CRM.Features.Accounting.BankStatementServiceAX
 {
-    public class BanskStatementServiceAXService 
+    public class BanskStatementServiceAXService
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly BankStatementAppService _bankStatementAppService;
@@ -74,8 +74,8 @@ namespace CRM.Features.BankStatementServiceAX
 
                 HEADER.LINES = LIST.ToArray();
 
-                string BankStatementLines = SerializationService.Serialize(HEADER);
-                ServiceReference1.CallContext context = new ServiceReference1.CallContext { Company = data[0].CompanyId };
+                string BankStatementLines = HEADER.Serialize();
+                CallContext context = new CallContext { Company = data[0].CompanyId };
                 var serviceClient = new M_BankStatementClient(GetBinding(), GetEndpointAddr());
 
                 serviceClient.ClientCredentials.Windows.ClientCredential.UserName = "servicio_ax";
@@ -99,13 +99,13 @@ namespace CRM.Features.BankStatementServiceAX
                 }
             }
 
-            if(errors.Count > 0)
+            if (errors.Count > 0)
             {
-                string message = responses.Count > 0 ? $"Diarios creados: {String.Join(" ", responses)} Errores encontrados: {String.Join(" ", errors)}" : String.Join(" ", errors);
+                string message = responses.Count > 0 ? $"Diarios creados: {string.Join(" ", responses)} Errores encontrados: {string.Join(" ", errors)}" : string.Join(" ", errors);
                 return EntityResponse.CreateError(message);
             }
 
-            return EntityResponse.CreateOk(String.Join(" ", responses));
+            return EntityResponse.CreateOk(string.Join(" ", responses));
         }
         private NetTcpBinding GetBinding()
         {

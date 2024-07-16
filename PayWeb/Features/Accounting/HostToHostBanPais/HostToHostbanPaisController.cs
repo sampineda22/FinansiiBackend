@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using RouteAttribute = Microsoft.AspNetCore.Components.RouteAttribute;
 
-namespace CRM.Features.HostToHostBanPais
+namespace CRM.Features.Accounting.HostToHostBanPais
 {
     [Route("[Controller]")]
     [ApiController]
@@ -22,9 +22,9 @@ namespace CRM.Features.HostToHostBanPais
         }
 
         [HttpPost("GenerarEncryptarArchivo")]
-        public async  Task<IActionResult> GenerarEncryptarArchivo([FromBody] string json)
+        public async Task<IActionResult> GenerarEncryptarArchivo([FromBody] string json)
         {
-            EntityResponse response = await  _hostToHostBanPaisServices.GenerarEncryptarArchivo(json);
+            EntityResponse response = await _hostToHostBanPaisServices.GenerarEncryptarArchivo(json);
             if (!response.Ok)
             {
                 return BadRequest(response);

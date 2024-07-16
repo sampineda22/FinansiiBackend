@@ -7,18 +7,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using RouteAttribute = Microsoft.AspNetCore.Components.RouteAttribute;
 
-namespace CRM.Features.BankStatementDetails
+namespace CRM.Features.Accounting.BankStatementDetails
 {
     [Route("[Controller]")]
     [ApiController]
     [Authorize]
-    public class BankStatementDetailsController:ControllerBase
+    public class BankStatementDetailsController : ControllerBase
     {
         private readonly BankStatementDetailsAppService _bankStatementDetailsAppService;
 
         public BankStatementDetailsController(BankStatementDetailsAppService bankStatementDetailsAppService)
         {
-            this._bankStatementDetailsAppService = bankStatementDetailsAppService;
+            _bankStatementDetailsAppService = bankStatementDetailsAppService;
         }
 
         [HttpPost("AddBankStatementDetails")]

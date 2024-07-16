@@ -10,7 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using RouteAttribute = Microsoft.AspNetCore.Components.RouteAttribute;
 
-namespace CRM.Features.BankConfiguration
+namespace CRM.Features.Accounting.BankConfiguration
 {
     [Route("[Controller]")]
     [ApiController]
@@ -22,7 +22,7 @@ namespace CRM.Features.BankConfiguration
 
         public BankConfigurationController(IHttpContextAccessor httpContextAccessor, BankConfigurationAppService bankConfigurationAppService)
         {
-            this._bankConfigurationAppService = bankConfigurationAppService;
+            _bankConfigurationAppService = bankConfigurationAppService;
 
             if (httpContextAccessor.HttpContext.User.Identity.Name != null)
             {

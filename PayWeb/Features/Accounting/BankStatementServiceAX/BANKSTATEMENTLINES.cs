@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-namespace CRM.Features.BankStatementServiceAX
+namespace CRM.Features.Accounting.BankStatementServiceAX
 {
     public class BANKSTATEMENTHEAD
     {

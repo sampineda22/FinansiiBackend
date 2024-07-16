@@ -1,4 +1,4 @@
-﻿using CRM.Features.BankStatement;
+﻿using CRM.Features.Accounting.BankStatement;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;

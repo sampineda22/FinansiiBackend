@@ -10,19 +10,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using RouteAttribute = Microsoft.AspNetCore.Components.RouteAttribute;
 
-namespace CRM.Features.BankStatement
+namespace CRM.Features.Accounting.BankStatement
 {
     [Route("[Controller]")]
     [ApiController]
     [Authorize]
-    public class BankStatementController: ControllerBase
+    public class BankStatementController : ControllerBase
     {
         private readonly BankStatementAppService _bankStatementAppService;
         private User loggedUser = new User { };
 
         public BankStatementController(IHttpContextAccessor httpContextAccessor, BankStatementAppService bankStatementAppService)
         {
-            this._bankStatementAppService = bankStatementAppService;
+            _bankStatementAppService = bankStatementAppService;
 
             if (httpContextAccessor.HttpContext.User.Identity.Name != null)
             {
@@ -54,7 +54,7 @@ namespace CRM.Features.BankStatement
             }
             return Ok(bankStatement);
         }
-        
+
 
         [HttpGet("for-BankStatementId")]
         public IActionResult FindByBankStatemenId([FromQuery] int bankStatemenId)
