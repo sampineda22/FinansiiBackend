@@ -37,7 +37,7 @@ namespace CRM.Features.Credits.ReceiptBreakdown
             _workpaperReportService = workpaperReportService;
         }
 
-        public async Task<EntityResponse> CreateReceiptDetailBreakdownReports(string start, string end, string weekNumber, string companyCode, string salesAgentSelected = "")
+        public async Task<EntityResponse> CreateReceiptDetailBreakdownReports(string start, string end, string weekNumber, string companyCode, string salesAgentSelected)
         {
             try
             {
@@ -66,7 +66,7 @@ namespace CRM.Features.Credits.ReceiptBreakdown
                 };
                 List<SalesAgent> allSalesAgents = _unitOfWork.Repository<SalesAgent>().GetSP<SalesAgent>("[Finansii].[GetSalesAgents]", parameters, 250).ToList();
 
-                if (salesAgentSelected != "")
+                if (salesAgentSelected != "x")
                 {
                     salesAgents = allSalesAgents.FindAll(x => x.PersonalCode == salesAgentSelected);
                 }
@@ -75,123 +75,137 @@ namespace CRM.Features.Credits.ReceiptBreakdown
                     salesAgents = allSalesAgents;
                 }
 
+                parameters = new SqlParameter[] { };
+                List<Companies> companies = _unitOfWork.Repository<Companies>().GetSP<Companies>("[Finansii].[GetCompaniesNames]", parameters).ToList();
+
                 foreach (SalesAgent agent in salesAgents)
                 {
                     int advanceTableRow = 0;
                     int tableRow = 10;
 
-                    response = _workpaperReportService.GetReportsFolderPath(companyCode, startDate, serverPath, "Desglose de Recibos", agent.Name, week, weekNumber).Result;
-                    if (response is EntityResponse<string> genericResponse2)
+                    parameters = new SqlParameter[]
                     {
-                        folderPath = genericResponse2.Data;
-                    }
-                    else
-                    {
-                        return EntityResponse.CreateError($"{response.Mensaje}");
-                    }
-
-                    response = _workpaperReportService.CopyExcelBook(templatePath, folderPath, "Desglose de Recibos", "Reporte").Result;
-                    if (response is EntityResponse<string> genericResponse1)
-                    {
-                        excelPath = genericResponse1.Data;
-                    }
-                    else
-                    {
-                        return EntityResponse.CreateError($"{response.Mensaje}");
-                    }
-
-                    FileInfo sourceFile = new(excelPath);
-
-                    using (ExcelPackage package = new(sourceFile))
-                    {
-                        ExcelWorksheet targetWorksheet = package.Workbook.Worksheets[0];
-
-                        parameters = new SqlParameter[] { };
-                        List<Companies> companies = _unitOfWork.Repository<Companies>().GetSP<Companies>("[Finansii].[GetCompaniesNames]", parameters).ToList();
-
-                        parameters = new SqlParameter[]
-                        {
                             new SqlParameter("@StartDate", startDate),
                             new SqlParameter("@EndDate", endDate),
                             new SqlParameter("@PersonalCode", agent.PersonalCode),
                             new SqlParameter("@DataAreaId", companyCode),
-                        };
-                        List<ReceiptDetailBreakdown> receiptDetailBreakdown = _unitOfWork.Repository<ReceiptDetailBreakdown>().GetSP<ReceiptDetailBreakdown>("[Finansii].[ReceiptDetailBreakdown]", parameters).ToList();
+                    };
+                    List<ReceiptDetailBreakdown> receiptDetailBreakdown = _unitOfWork.Repository<ReceiptDetailBreakdown>().GetSP<ReceiptDetailBreakdown>("[Finansii].[ReceiptDetailBreakdown]", parameters).ToList();
 
-                        targetWorksheet.Cells[$"C2"].Value = companies.Find(x => x.CompanyCode == companyCode).Name;
-                        targetWorksheet.Cells[$"C4"].Value = startDate.Year.ToString(); //Año
-                        targetWorksheet.Cells[$"F4"].Value = agent.Name; //Asesor
-                        targetWorksheet.Cells[$"C5"].Value = weekNumber; //Semana
-                        targetWorksheet.Cells[$"C6"].Value = week; //Fecha
-
-                        table = targetWorksheet.Tables["TablaDesglose"];
-
-                        foreach (ReceiptDetailBreakdown detail in receiptDetailBreakdown)
+                    if(receiptDetailBreakdown.Count > 0)
+                    {
+                        response = _workpaperReportService.GetReportsFolderPath(companyCode, startDate, serverPath, "Cédulas de Asesores de Venta", agent.Name, week, weekNumber).Result;
+                        if (response is EntityResponse<string> genericResponse2)
                         {
-                            targetWorksheet.Cells[$"B{tableRow}"].Value = detail.ReceiptNumber;
-                            targetWorksheet.Cells[$"C{tableRow}"].Value = detail.DocumentNumber;
-                            targetWorksheet.Cells[$"D{tableRow}"].Value = detail.FELDocument;
-                            targetWorksheet.Cells[$"E{tableRow}"].Value = detail.ProductType;
-                            targetWorksheet.Cells[$"F{tableRow}"].Value = detail.Date;
-                            targetWorksheet.Cells[$"G{tableRow}"].Value = detail.State;
-                            targetWorksheet.Cells[$"H{tableRow}"].Value = detail.ClientAccount;
-                            targetWorksheet.Cells[$"I{tableRow}"].Value = detail.ClientName;
-                            targetWorksheet.Cells[$"J{tableRow}"].Value = detail.DebitCollectorCode;
-                            targetWorksheet.Cells[$"K{tableRow}"].Value = detail.CurrencyCode;
-                            targetWorksheet.Cells[$"L{tableRow}"].Value = detail.ReceiptAmountInCurrency;
-                            targetWorksheet.Cells[$"M{tableRow}"].Value = detail.ReceiptAmount;
-                            targetWorksheet.Cells[$"N{tableRow}"].Value = detail.CanceledReceiptAmount;
-                            targetWorksheet.Cells[$"O{tableRow}"].Value = detail.CashAmount;
-                            targetWorksheet.Cells[$"P{tableRow}"].Value = detail.Total;
-
-                            tableRow++;
-                            targetWorksheet.InsertRow(tableRow, 1);
+                            folderPath = genericResponse2.Data;
                         }
-                        targetWorksheet.DeleteRow(tableRow, 1);
-
-                        var newAddress = new ExcelAddressBase(table.Address.Start.Row, table.Address.Start.Column, tableRow, table.Address.End.Column);
-                        typeof(ExcelTable).GetProperty("Address").SetValue(table, newAddress);
-
-                        advanceTableRow = tableRow + spaceBetweenTables;
-
-                        parameters = new SqlParameter[]
+                        else
                         {
+                            return EntityResponse.CreateError($"{response.Mensaje}");
+                        }
+
+                        string pdfFilePath = $@"{folderPath}\{"Desglose de Recibos -" + agent.PersonalCode}.pdf";
+
+                        response = _workpaperReportService.CopyExcelBook(templatePath, folderPath, "Desglose de Recibos -" + agent.PersonalCode, "Reporte").Result;
+                        if (response is EntityResponse<string> genericResponse1)
+                        {
+                            excelPath = genericResponse1.Data;
+                        }
+                        else
+                        {
+                            return EntityResponse.CreateError($"{response.Mensaje}");
+                        }
+
+                        FileInfo sourceFile = new(excelPath);
+
+                        using (ExcelPackage package = new(sourceFile))
+                        {
+                            ExcelWorksheet targetWorksheet = package.Workbook.Worksheets[0];
+                            string receipt = "";
+
+                            targetWorksheet.Cells[$"C2"].Value = companies.Find(x => x.CompanyCode.ToLower() == companyCode.ToLower()).Name;
+                            targetWorksheet.Cells[$"C4"].Value = startDate.Year.ToString(); //Año
+                            targetWorksheet.Cells[$"F4"].Value = agent.Name; //Asesor
+                            targetWorksheet.Cells[$"C5"].Value = weekNumber; //Semana
+                            targetWorksheet.Cells[$"C6"].Value = week; //Fecha
+
+                            table = targetWorksheet.Tables["TablaDesglose"];
+
+                            foreach (ReceiptDetailBreakdown detail in receiptDetailBreakdown)
+                            {
+                                targetWorksheet.Cells[$"B{tableRow}"].Value = receipt == detail.ReceiptNumber ? "" : detail.ReceiptNumber;
+                                targetWorksheet.Cells[$"C{tableRow}"].Value = detail.DocumentNumber;
+                                targetWorksheet.Cells[$"D{tableRow}"].Value = detail.FELDocument;
+                                targetWorksheet.Cells[$"E{tableRow}"].Value = detail.ProductType;
+                                targetWorksheet.Cells[$"F{tableRow}"].Value = detail.Date.ToString("dd-MMM-yyyy", new System.Globalization.CultureInfo("es-ES"));
+                                targetWorksheet.Cells[$"G{tableRow}"].Value = detail.State;
+                                targetWorksheet.Cells[$"H{tableRow}"].Value = detail.ClientAccount;
+                                targetWorksheet.Cells[$"I{tableRow}"].Value = detail.ClientName;
+                                targetWorksheet.Cells[$"J{tableRow}"].Value = detail.DebitCollectorCode;
+                                targetWorksheet.Cells[$"K{tableRow}"].Value = detail.CurrencyCode;
+                                targetWorksheet.Cells[$"L{tableRow}"].Value = detail.ReceiptAmountInCurrency;
+                                targetWorksheet.Cells[$"M{tableRow}"].Value = detail.ReceiptAmount;
+                                targetWorksheet.Cells[$"N{tableRow}"].Value = detail.CanceledReceiptAmount;
+                                targetWorksheet.Cells[$"O{tableRow}"].Value = detail.CashAmount;
+                                targetWorksheet.Cells[$"P{tableRow}"].Value = detail.Total;
+
+                                targetWorksheet = _workpaperReportService.ApplyBorderToReport(tableRow, targetWorksheet, 'P', receipt != detail.ReceiptNumber);
+                                receipt = detail.ReceiptNumber;
+
+                                tableRow++;
+                                targetWorksheet.InsertRow(tableRow, 1);
+                            }
+                            targetWorksheet.DeleteRow(tableRow, 1);
+
+                            var newAddress = new ExcelAddressBase(table.Address.Start.Row, table.Address.Start.Column, tableRow, table.Address.End.Column);
+                            typeof(ExcelTable).GetProperty("Address").SetValue(table, newAddress);
+
+                            advanceTableRow = tableRow + spaceBetweenTables;
+
+                            parameters = new SqlParameter[]
+                            {
                             new SqlParameter("@SalesAgent", agent.PersonalCode),
                             new SqlParameter("@StartDate", startDate),
                             new SqlParameter("@EndDate", endDate),
                             new SqlParameter("@DataAreaId", companyCode)
-                        };
-                        List<AppliedAdvance> appliedAdvances = _unitOfWork.Repository<AppliedAdvance>().GetSP<AppliedAdvance>("[Finansii].[GetAdvancesWithInvoices]", parameters).ToList();
+                            };
+                            List<AppliedAdvance> appliedAdvances = _unitOfWork.Repository<AppliedAdvance>().GetSP<AppliedAdvance>("[Finansii].[GetAdvancesWithInvoices]", parameters).ToList();
 
-                        foreach (AppliedAdvance appliedAdvance in appliedAdvances)
-                        {
-                            targetWorksheet.Cells[$"B{advanceTableRow}"].Value = appliedAdvance.AdvanceReceipt;
-                            targetWorksheet.Cells[$"C{advanceTableRow}"].Value = appliedAdvance.AppliedAdvanceAmount;
-                            targetWorksheet.Cells[$"D{advanceTableRow}"].Value = appliedAdvance.Invoice;
+                            foreach (AppliedAdvance appliedAdvance in appliedAdvances)
+                            {
+                                targetWorksheet.Cells[$"B{advanceTableRow}"].Value = appliedAdvance.AdvanceReceipt;
+                                targetWorksheet.Cells[$"C{advanceTableRow}"].Value = appliedAdvance.AppliedAdvanceAmount;
+                                targetWorksheet.Cells[$"C{advanceTableRow}"].Style.Numberformat.Format = "#,##0.00";
+                                targetWorksheet.Cells[$"C{advanceTableRow}"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
+                                targetWorksheet.Cells[$"D{advanceTableRow}"].Value = appliedAdvance.Invoice;
 
-                            advanceTableRow++;
-                            targetWorksheet.InsertRow(advanceTableRow, 1);
-                        }
+                                advanceTableRow++;
+                                targetWorksheet.InsertRow(advanceTableRow, 1);
+                            }
 
-                        targetWorksheet.DeleteRow(advanceTableRow, 1);
+                            targetWorksheet.DeleteRow(advanceTableRow, 1);
 
-                        table = targetWorksheet.Tables["TablaAnticipos"];
-                        newAddress = new ExcelAddressBase(table.Address.Start.Row, table.Address.Start.Column, advanceTableRow, table.Address.End.Column);
-                        typeof(ExcelTable).GetProperty("Address").SetValue(table, newAddress);
+                            table = targetWorksheet.Tables["TablaAnticipos"];
+                            newAddress = new ExcelAddressBase(table.Address.Start.Row, table.Address.Start.Column, advanceTableRow, table.Address.End.Column);
+                            typeof(ExcelTable).GetProperty("Address").SetValue(table, newAddress);
 
-                        var receipts = receiptDetailBreakdown.Select(e => e.ReceiptNumber.Replace(" ","")).Distinct();
-                        string documentsNum = string.Join(",", receipts);
+                            var receipts = receiptDetailBreakdown.Select(e => e.ReceiptNumber.Replace(" ", "")).Distinct();
+                            string documentsNum = string.Join(",", receipts);
 
-                        parameters = new SqlParameter[]
-                        {
+                            parameters = new SqlParameter[]
+                            {
                             new SqlParameter("@DocumentsNum", documentsNum),
                             new SqlParameter("@DataAreaId", companyCode)
-                        };
-                        List<JournalLine> journalLines = _unitOfWork.Repository<JournalLine>().GetSP<JournalLine>("[Finansii].[GetJournalsByDocumentNum]", parameters).ToList();
-                        
-                        targetWorksheet.Cells[$"C{advanceTableRow + spaceBetweenSignature}"].Value = journalLines.Count <= 0 ? "" : string.Join(", ", journalLines.Select(x => x.ModifiedBy).Distinct());
+                            };
+                            List<JournalLine> journalLines = _unitOfWork.Repository<JournalLine>().GetSP<JournalLine>("[Finansii].[GetJournalsByDocumentNum]", parameters).ToList();
 
-                        package.Save();
+                            targetWorksheet.Cells[$"C{advanceTableRow + spaceBetweenSignature}"].Value = journalLines.Count <= 0 ? "" : string.Join(", ", journalLines.Select(x => x.ModifiedBy).Distinct());
+
+                            package.Save();
+                        }
+
+                        _workpaperReportService.ConvertExcelToPdf(excelPath, pdfFilePath);
+                        File.Delete(excelPath);
                     }
                 }
             }
