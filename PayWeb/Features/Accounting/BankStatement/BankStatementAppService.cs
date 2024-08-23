@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Http;
 using Renci.SshNet.Sftp;
 using Newtonsoft.Json;
 using CRM.Features.Accounting.BankStatementDetails;
+using CRM.Features.Accounting.BankConfiguration;
 
 namespace CRM.Features.Accounting.BankStatement
 {
@@ -56,28 +57,36 @@ namespace CRM.Features.Accounting.BankStatement
             return EntityResponse.CreateOk();
         }
 
-        public async Task<EntityResponse> ImportStatementFromFileByAccount(string accountsIds, string dateString, string companyCode)
+        public async Task<EntityResponse> ImportStatementFromFileByAccount(string dateString, string companyCode, string account)
         {
             DateTime transactionDate = DateTime.Parse(dateString).AddDays(1);
             bool wasFound = false;
             string fileName;
             EntityResponse<BankStatementDto> response = new();
             List<BankStatementDto> bankStatementDtos = new();
-            List<string> accounts = accountsIds.Split(',').ToList();
+            List<BankConfiguration.BankConfiguration> accounts = new();
             List<string> errors = new();
 
+            if(account == "" || account == null || account == "x")
+            {
+                accounts = _unitOfWork.Repository<BankConfiguration.BankConfiguration>().Query().Where(x => x.ActiveState == true).ToList();
+            }
+            else
+            {
+                accounts = _unitOfWork.Repository<BankConfiguration.BankConfiguration>().Query().Where(x => x.AccountId == account).ToList();
+            }
 
-            foreach (string accountId in accounts)
+            foreach (BankConfiguration.BankConfiguration bankAccount in accounts)
             {
                 if (dateString != null)
                 {
                     if (dateString.Replace(" ", "") != "")
                     {
-                        List<BankStatement> bankStatements = await GetByAccountId(accountId, dateString, companyCode);
+                        List<BankStatement> bankStatements = await GetByAccountId(bankAccount.AccountId, dateString, companyCode);
 
                         if (bankStatements.Exists(x => x.Status == BankStatatementState.Processed))
                         {
-                            errors.Add($"No se puede importar las transacciones de la fecha {bankStatements.Find(x => x.Status == BankStatatementState.Processed).TransactionDate} para la cuenta {accountId} ya que se encuentran exportadas en AX.");
+                            errors.Add($"No se puede importar las transacciones de la fecha {bankStatements.Find(x => x.Status == BankStatatementState.Processed).TransactionDate} para la cuenta {bankAccount.AccountId} ya que se encuentran exportadas en AX.");
                             break;
                         }
 
@@ -89,10 +98,10 @@ namespace CRM.Features.Accounting.BankStatement
                     }
                 }
 
-                var bankConfiguraion = _unitOfWork.Repository<BankConfiguration.BankConfiguration>().Query().FirstOrDefault(b => b.AccountId.Equals(accountId));
+                var bankConfiguraion = _unitOfWork.Repository<BankConfiguration.BankConfiguration>().Query().FirstOrDefault(b => b.AccountId.Equals(bankAccount.AccountId));
                 if (bankConfiguraion == null)
                 {
-                    errors.Add($"No se encontro una configuracion para la cuenta {accountId}.");
+                    errors.Add($"No se encontro una configuracion para la cuenta {bankAccount.AccountId}.");
                     break;
                 }
 
