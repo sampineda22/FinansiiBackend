@@ -1,11 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PayWeb.Common;
 using PayWeb.Infrastructure.Core;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static CRM.Infrastructure.Enum.TransactionsType;
 
 namespace CRM.Features.Accounting.BankStatementDetails
 {

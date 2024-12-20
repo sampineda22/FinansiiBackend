@@ -30,6 +30,10 @@ namespace PayWeb.Infrastructure.Core
         {
             return new Repository<T>(dbContext);
         }
+        public IRepository<string> StringRepository()
+        {
+            return new Repository<string>(dbContext);
+        }
         public async Task RollBackAsync()
         {
             await _transaction.RollbackAsync();

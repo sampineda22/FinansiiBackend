@@ -4,6 +4,7 @@ using CRM.Features.Accounting.BankConfiguration;
 using CRM.Features.Accounting.BankStatement;
 using CRM.Features.Accounting.BankStatementDetails;
 using CRM.Features.Accounting.BankStatementServiceAX;
+using CRM.Features.Accounting.CD;
 using CRM.Features.Accounting.HostToHostBanPais;
 using CRM.Features.Accounting.ProvidersReport;
 using CRM.Features.Admin.Roles;
@@ -147,6 +148,7 @@ namespace PayWeb
             services.AddScoped<WorkpaperReportService>();
             services.AddScoped<ReceiptDetailBreakdownService>();
             services.AddScoped<ProvidersReportService>();
+            services.AddScoped<CertificateDepositService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

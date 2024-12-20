@@ -19,45 +19,7 @@ namespace CRM.Migrations
                 .HasAnnotation("ProductVersion", "5.0.5")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("CRM.Features.Admin.Roles.Role", b =>
-                {
-                    b.Property<int>("RoleId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("CompanyCode")
-                        .HasMaxLength(4)
-                        .HasColumnType("varchar(4)");
-
-                    b.Property<DateTime>("CreationDate")
-                        .HasColumnType("datetime");
-
-                    b.Property<string>("CreationUser")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("varchar(60)");
-
-                    b.Property<DateTime?>("UpdateDate")
-                        .HasColumnType("datetime");
-
-                    b.Property<string>("UpdateUser")
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)");
-
-                    b.HasKey("RoleId", "CompanyCode");
-
-                    b.ToTable("Roles", "Finansii");
-                });
-
-            modelBuilder.Entity("CRM.Features.BankConfiguration.BankConfiguration", b =>
+            modelBuilder.Entity("CRM.Features.Accounting.BankConfiguration.BankConfiguration", b =>
                 {
                     b.Property<int>("BankConfigurationId")
                         .ValueGeneratedOnAdd()
@@ -113,6 +75,9 @@ namespace CRM.Migrations
                     b.Property<int>("Port")
                         .HasColumnType("int");
 
+                    b.Property<bool>("PostJournal")
+                        .HasColumnType("bit");
+
                     b.Property<string>("UserName")
                         .IsRequired()
                         .HasMaxLength(75)
@@ -123,7 +88,7 @@ namespace CRM.Migrations
                     b.ToTable("BankConfiguration", "Finansii");
                 });
 
-            modelBuilder.Entity("CRM.Features.BankStatement.BankStatement", b =>
+            modelBuilder.Entity("CRM.Features.Accounting.BankStatement.BankStatement", b =>
                 {
                     b.Property<int>("BankStatementId")
                         .ValueGeneratedOnAdd()
@@ -157,7 +122,32 @@ namespace CRM.Migrations
                     b.ToTable("BankStatement", "Finansii");
                 });
 
-            modelBuilder.Entity("CRM.Features.BankStatementDetails.BankStatementDetails", b =>
+            modelBuilder.Entity("CRM.Features.Accounting.BankStatement.TransactionCode", b =>
+                {
+                    b.Property<string>("BankAccountId")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.HasKey("BankAccountId", "Code");
+
+                    b.ToTable("TransactionCodes", "Finansii");
+                });
+
+            modelBuilder.Entity("CRM.Features.Accounting.BankStatementDetails.BankStatementDetails", b =>
                 {
                     b.Property<int>("BankStatementDetailId")
                         .ValueGeneratedOnAdd()
@@ -203,6 +193,150 @@ namespace CRM.Migrations
                     b.ToTable("BankStatementDetails", "Finansii");
                 });
 
+            modelBuilder.Entity("CRM.Features.Accounting.CD.CertificateDeposit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Bank")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CDNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("varchar(MAX)");
+
+                    b.Property<string>("CompanyCode")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<DateTime>("CreationDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("'1900-01-01'");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("DailyIncome")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("ModificationDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<decimal>("RatePercentage")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("RenovationCertificate")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("isCapitalizable")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("isEnabled")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CertificatesDeposit", "Finansii");
+                });
+
+            modelBuilder.Entity("CRM.Features.Accounting.CD.WeeklyRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("AmountInCurrency")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("CertificateId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Journal")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("Week")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CertificateId");
+
+                    b.ToTable("WeeklyRecords", "Finansii");
+                });
+
+            modelBuilder.Entity("CRM.Features.Admin.Roles.Role", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("CompanyCode")
+                        .HasMaxLength(4)
+                        .HasColumnType("varchar(4)");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.HasKey("RoleId", "CompanyCode");
+
+                    b.ToTable("Roles", "Finansii");
+                });
+
             modelBuilder.Entity("CRM.Infrastructure.Users.UserHomologation", b =>
                 {
                     b.Property<string>("PersonalCode")
@@ -224,6 +358,40 @@ namespace CRM.Migrations
                     b.HasKey("PersonalCode", "CompanyCode");
 
                     b.ToTable("UsersHomologation", "Finansii");
+                });
+
+            modelBuilder.Entity("CRM.Models.Finansii.Email", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("nvarchar(6)");
+
+                    b.Property<string>("CompanyCode")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("nvarchar(6)");
+
+                    b.Property<string>("EmailAddress")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PersonalCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Emails", "Finansii");
                 });
 
             modelBuilder.Entity("CRM.Models.General.RoutePath", b =>
@@ -283,15 +451,31 @@ namespace CRM.Migrations
                     b.ToTable("User", "Finansii");
                 });
 
-            modelBuilder.Entity("CRM.Features.BankStatementDetails.BankStatementDetails", b =>
+            modelBuilder.Entity("CRM.Features.Accounting.BankStatementDetails.BankStatementDetails", b =>
                 {
-                    b.HasOne("CRM.Features.BankStatement.BankStatement", "BankStatement")
+                    b.HasOne("CRM.Features.Accounting.BankStatement.BankStatement", "BankStatement")
                         .WithMany()
                         .HasForeignKey("BankStatementId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("BankStatement");
+                });
+
+            modelBuilder.Entity("CRM.Features.Accounting.CD.WeeklyRecord", b =>
+                {
+                    b.HasOne("CRM.Features.Accounting.CD.CertificateDeposit", "CertificateDeposit")
+                        .WithMany("WeeklyRecords")
+                        .HasForeignKey("CertificateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CertificateDeposit");
+                });
+
+            modelBuilder.Entity("CRM.Features.Accounting.CD.CertificateDeposit", b =>
+                {
+                    b.Navigation("WeeklyRecords");
                 });
 #pragma warning restore 612, 618
         }

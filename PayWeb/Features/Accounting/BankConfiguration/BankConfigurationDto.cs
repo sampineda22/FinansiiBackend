@@ -20,5 +20,6 @@ namespace CRM.Features.Accounting.BankConfiguration
         public string FileRoute { get; set; }
         public string LocalFileRoute { get; set; }
         public string FileName { get; set; }
+        public bool ActiveState { get; set; }
     }
 }

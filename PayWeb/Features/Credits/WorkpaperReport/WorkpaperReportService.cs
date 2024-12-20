@@ -3,7 +3,6 @@ using CRM.Features.Credits.ReceiptDetailBreakdownReport;
 using CRM.Features.Credits.WorkpaperReport;
 using CRM.Infrastructure.Core;
 using CRM.Models.General;
-using CRM.Models.PayWeb;
 using Microsoft.Data.SqlClient;
 using OfficeOpenXml;
 using OfficeOpenXml.Table;
@@ -46,9 +45,8 @@ namespace CRM.Features.Credits.ReceiptBreakdownReport
                 string folderPath = "",
                        excelPath = "",
                        week = "",
-                       templatePath       = _unitOfWork.Repository<RoutePath>().Query().Where(x => x.Name == "WPTemplate").FirstOrDefault().URL,
-                       serverPath         = _unitOfWork.Repository<RoutePath>().Query().Where(x => x.Name == "Fact").FirstOrDefault().URL,
-                       companyCodePayRoll = _unitOfWorkPayWeb.Repository<ControlEmpresa>().Query().Where(x => x.CodAx == companyCode).FirstOrDefault().CodEmpresaPayRoll;
+                       templatePath = _unitOfWork.Repository<RoutePath>().Query().Where(x => x.Name == "WPTemplate").FirstOrDefault().URL,
+                       serverPath = _unitOfWork.Repository<RoutePath>().Query().Where(x => x.Name == "Fact").FirstOrDefault().URL;
                 int spaceBetweenTables = 5;
 
                 week = $"{startDate.ToString("dd-MM-yyyy")} al {endDate.ToString("dd-MM-yyyy")}";
@@ -82,6 +80,7 @@ namespace CRM.Features.Credits.ReceiptBreakdownReport
                         new SqlParameter("@EndDate", endDate),
                         new SqlParameter("@PersonalCode", salesAgent.PersonalCode),
                         new SqlParameter("@DataAreaId", companyCode),
+                        new SqlParameter("@DataAreaOfAgent", salesAgent.AgentCompanyCode),
                     };
                     List<WorkPaper> workPaperDetails = _unitOfWork.Repository<WorkPaper>().GetSP<WorkPaper>("[Finansii].[WorkpaperReport]", parameters).ToList();
 
@@ -176,7 +175,7 @@ namespace CRM.Features.Credits.ReceiptBreakdownReport
                             new SqlParameter("@Vouchers", vouchersJoined),
                             new SqlParameter("@DataAreaId", companyCode)
                             };
-                            List<WorkPaperSummary> workPaperSummaryDetail = _unitOfWork.Repository<WorkPaperSummary>().GetSP<WorkPaperSummary>("[Finansii].[WorkpaperReportSummary]", parameters).ToList();
+                            List<WorkPaperSummary> workPaperSummaryDetail = _unitOfWork.Repository<WorkPaperSummary>().GetSP<WorkPaperSummary>("[Finansii].[WorkpaperReportSummary]", parameters, 500).ToList();
 
                             foreach (WorkPaperSummary detail in workPaperSummaryDetail)
                             {
@@ -197,7 +196,7 @@ namespace CRM.Features.Credits.ReceiptBreakdownReport
                             newAddress = new ExcelAddressBase(table.Address.Start.Row, table.Address.Start.Column, summaryTableRow, table.Address.End.Column);
                             typeof(ExcelTable).GetProperty("Address").SetValue(table, newAddress);
 
-                            package.Save();
+                             package.Save();
                         }
 
                         ConvertExcelToPdf(excelPath, pdfFilePath);

@@ -63,13 +63,30 @@ namespace PayWeb.Infrastructure.Core
                     result.Add(t);
                 }
             }
+            return result;
+        }
 
+        public List<string> GetSPForString(string query, SqlParameter[] paramsArray, int commandTimeout = 100)
+        {
+            var result = new List<string>();
+            dbContext.Database.OpenConnection();
+            var command = dbContext.Database.GetDbConnection().CreateCommand();
+            command.CommandText = query;
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddRange(paramsArray);
+            command.CommandTimeout = commandTimeout;
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    result.Add(reader.GetString(0));
+                }
+            }
 
             return result;
         }
 
-
-       
 
         public int ExecuteSP(string query, SqlParameter[] paramsArray) 
         {

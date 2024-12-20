@@ -24,6 +24,7 @@ namespace CRM.Infrastructure.Maps
             builder.Property(e => e.LocalFileRoute).HasMaxLength(200).IsRequired();
             builder.Property(e => e.FileName).HasMaxLength(75).IsRequired();
             builder.Property(e => e.ActiveState).HasColumnType("bit");
+            builder.Property(e => e.PostJournal).HasColumnType("bit");
         }
     }
 }

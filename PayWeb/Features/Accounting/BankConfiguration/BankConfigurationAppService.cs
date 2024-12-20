@@ -3,7 +3,6 @@ using PayWeb.Common;
 using PayWeb.Infrastructure.Core;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -61,7 +60,8 @@ namespace CRM.Features.Accounting.BankConfiguration
                                                                        Password = u.Password,
                                                                        FileRoute = u.FileRoute,
                                                                        LocalFileRoute = u.LocalFileRoute,
-                                                                       FileName = u.FileName
+                                                                       FileName = u.FileName,
+                                                                       ActiveState = u.ActiveState,
                                                                    }).ToListAsync();
             return bankConfigurations;
         }

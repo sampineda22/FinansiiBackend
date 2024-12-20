@@ -64,7 +64,7 @@ namespace CRM.Features.Credits.ReceiptBreakdown
                 {
                      new SqlParameter("@EmpresaId", companyCode),
                 };
-                List<SalesAgent> allSalesAgents = _unitOfWork.Repository<SalesAgent>().GetSP<SalesAgent>("[Finansii].[GetSalesAgents]", parameters, 250).ToList();
+                List<SalesAgent> allSalesAgents = _unitOfWork.Repository<SalesAgent>().GetSP<SalesAgent>("[Finansii].[GetSalesAgents]", parameters, 400).ToList();
 
                 if (salesAgentSelected != "x")
                 {
@@ -89,8 +89,9 @@ namespace CRM.Features.Credits.ReceiptBreakdown
                             new SqlParameter("@EndDate", endDate),
                             new SqlParameter("@PersonalCode", agent.PersonalCode),
                             new SqlParameter("@DataAreaId", companyCode),
+                            new SqlParameter("@DataAreaOfAgent", agent.AgentCompanyCode)
                     };
-                    List<ReceiptDetailBreakdown> receiptDetailBreakdown = _unitOfWork.Repository<ReceiptDetailBreakdown>().GetSP<ReceiptDetailBreakdown>("[Finansii].[ReceiptDetailBreakdown]", parameters).ToList();
+                    List<ReceiptDetailBreakdown> receiptDetailBreakdown = _unitOfWork.Repository<ReceiptDetailBreakdown>().GetSP<ReceiptDetailBreakdown>("[Finansii].[ReceiptDetailBreakdown]", parameters, 600).ToList();
 
                     if(receiptDetailBreakdown.Count > 0)
                     {
@@ -104,7 +105,7 @@ namespace CRM.Features.Credits.ReceiptBreakdown
                             return EntityResponse.CreateError($"{response.Mensaje}");
                         }
 
-                        string pdfFilePath = $@"{folderPath}\{"Desglose de Recibos -" + agent.PersonalCode}.pdf";
+                        string pdfFilePath = $@"{folderPath}\{"Reporte detalle de recibos -" + agent.PersonalCode}.pdf";
 
                         response = _workpaperReportService.CopyExcelBook(templatePath, folderPath, "Desglose de Recibos -" + agent.PersonalCode, "Reporte").Result;
                         if (response is EntityResponse<string> genericResponse1)
@@ -171,8 +172,8 @@ namespace CRM.Features.Credits.ReceiptBreakdown
                             };
                             List<AppliedAdvance> appliedAdvances = _unitOfWork.Repository<AppliedAdvance>().GetSP<AppliedAdvance>("[Finansii].[GetAdvancesWithInvoices]", parameters).ToList();
 
-                            foreach (AppliedAdvance appliedAdvance in appliedAdvances)
-                            {
+                            /*foreach (AppliedAdvance appliedAdvance in appliedAdvances)
+                            {//Esta comentado hasta que se resuelva lo de los anticipos
                                 targetWorksheet.Cells[$"B{advanceTableRow}"].Value = appliedAdvance.AdvanceReceipt;
                                 targetWorksheet.Cells[$"C{advanceTableRow}"].Value = appliedAdvance.AppliedAdvanceAmount;
                                 targetWorksheet.Cells[$"C{advanceTableRow}"].Style.Numberformat.Format = "#,##0.00";
@@ -181,7 +182,7 @@ namespace CRM.Features.Credits.ReceiptBreakdown
 
                                 advanceTableRow++;
                                 targetWorksheet.InsertRow(advanceTableRow, 1);
-                            }
+                            }*/
 
                             targetWorksheet.DeleteRow(advanceTableRow, 1);
 
@@ -204,7 +205,7 @@ namespace CRM.Features.Credits.ReceiptBreakdown
                             package.Save();
                         }
 
-                        _workpaperReportService.ConvertExcelToPdf(excelPath, pdfFilePath);
+                          _workpaperReportService.ConvertExcelToPdf(excelPath, pdfFilePath);
                         File.Delete(excelPath);
                     }
                 }
@@ -230,12 +231,19 @@ namespace CRM.Features.Credits.ReceiptBreakdown
 
                 parameters = new SqlParameter[]
                 {
+                     new SqlParameter("@EmpresaId", companyCode),
+                };
+                List<SalesAgent> salesAgents = _unitOfWork.Repository<SalesAgent>().GetSP<SalesAgent>("[Finansii].[GetSalesAgents]", parameters, 250).ToList();
+
+                parameters = new SqlParameter[]
+                {
                    new SqlParameter("@StartDate", startDate),
                    new SqlParameter("@EndDate", endDate),
                    new SqlParameter("@PersonalCode", salesmanCode),
                    new SqlParameter("@DataAreaId", companyCode),
+                   new SqlParameter("@DataAreaOfAgent", salesAgents.Find(x => x.PersonalCode == salesmanCode).AgentCompanyCode),
                 };
-                receiptDetailBreakdown = _unitOfWork.Repository<ReceiptDetailBreakdown>().GetSP<ReceiptDetailBreakdown>("[Finansii].[ReceiptDetailBreakdown]", parameters, commandTimeout: 180).ToList();
+                receiptDetailBreakdown = _unitOfWork.Repository<ReceiptDetailBreakdown>().GetSP<ReceiptDetailBreakdown>("[Finansii].[ReceiptDetailBreakdown]", parameters, commandTimeout: 300).ToList();
 
             }
             catch (Exception ex)

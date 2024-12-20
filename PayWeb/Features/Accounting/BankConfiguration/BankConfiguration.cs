@@ -21,5 +21,6 @@ namespace CRM.Features.Accounting.BankConfiguration
         public string LocalFileRoute { get; set; }
         public string FileName { get; set; }
         public bool ActiveState { get; set; }
+        public bool PostJournal { get; set; }
     }
 }

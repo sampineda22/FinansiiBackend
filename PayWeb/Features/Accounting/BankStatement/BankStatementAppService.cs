@@ -11,14 +11,9 @@ using static CRM.Infrastructure.Enum.BankStatementStatus;
 using static CRM.Infrastructure.Enum.TransactionsType;
 using Renci.SshNet;
 using static CRM.Infrastructure.Enum.Banks;
-using CRM.Features.Admin.Roles;
-using Microsoft.Identity.Client;
-using CRM.Infrastructure.Enum;
-using Microsoft.AspNetCore.Http;
 using Renci.SshNet.Sftp;
-using Newtonsoft.Json;
 using CRM.Features.Accounting.BankStatementDetails;
-using CRM.Features.Accounting.BankConfiguration;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 
 namespace CRM.Features.Accounting.BankStatement
 {
@@ -26,6 +21,8 @@ namespace CRM.Features.Accounting.BankStatement
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly BankStatementDetailsAppService _bankStatementDetailsAppService;
+        private static string IMPrivateKeyPath = @"//10.100.2.30//Host to Host//llavesecIMProd.asc"; //@"C://Users//spineda//Desktop//llavesec.asc";
+        private static string Password = "$,0mx&J5U/%4"; //"B9FU-r1G5y+!";
 
         public BankStatementAppService(IUnitOfWork unitOfWork, BankStatementDetailsAppService bankStatementDetailsAppService)
         {
@@ -126,7 +123,16 @@ namespace CRM.Features.Accounting.BankStatement
                             }
                             else if (bankConfiguraion.Bank == Bank.BANPAIS)
                             {
-                                response = IterateFilesAndSaveTransactions(files, transactionDate, bankConfiguraion, client, bankConfiguraion.FileName.Length, bankConfiguraion.FileName, $" - {transactionDate.Year}-{transactionDate.Month}-{transactionDate.Day}.txt").Result;
+                                response = /*await SaveTransactions(@"C:\Users\spineda\OneDrive - INTERMODA SA DE CV\Escritorio\MT940V1-010010026603 143 - 2024-12-7.txt", bankConfiguraion);*/ IterateFilesAndSaveTransactions(files, transactionDate, bankConfiguraion, client, bankConfiguraion.FileName.Length, bankConfiguraion.FileName, $" - {transactionDate.Year}-{transactionDate.Month}-{transactionDate.Day}.txt").Result;
+                            }
+                            else if (bankConfiguraion.Bank == Bank.ATLANTIDAD)
+                            {
+                                fileName = bankConfiguraion.FileName + $"{transactionDate.Year}{transactionDate.Month.ToString("D2")}{transactionDate.Day.ToString("D2")}_{transactionDate.Year}{transactionDate.Month.ToString("D2")}{transactionDate.Day.ToString("D2")}";
+                                response = IterateFilesAndSaveTransactions(files, transactionDate, bankConfiguraion, client, fileName.Length, fileName, $".txt").Result;
+                            }
+                            else if (bankConfiguraion.Bank == Bank.FICOUSD)
+                            {
+                                response = IterateFilesAndSaveTransactions(files, transactionDate, bankConfiguraion, client, bankConfiguraion.FileName.Length, bankConfiguraion.FileName, $".txt").Result;
                             }
 
                             if (!response.Ok)
@@ -157,7 +163,8 @@ namespace CRM.Features.Accounting.BankStatement
             return EntityResponse.CreateOk(bankStatementDtos);
         }
 
-        public async Task<EntityResponse<BankStatementDto>> IterateFilesAndSaveTransactions(IEnumerable<ISftpFile> files, DateTime transactionDate, BankConfiguration.BankConfiguration bankConfiguration, SftpClient client, int trimEnd, string fileName, string nameExtension)
+        public async Task<EntityResponse<BankStatementDto>> IterateFilesAndSaveTransactions(IEnumerable<ISftpFile> files, DateTime transactionDate, BankConfiguration.BankConfiguration bankConfiguration, 
+                                                                                            SftpClient client, int trimEnd, string fileName, string nameExtension)
         {
             try
             {
@@ -178,6 +185,27 @@ namespace CRM.Features.Accounting.BankStatement
                             if (file.LastWriteTime.Year == transactionDate.Year && file.LastWriteTime.Month == transactionDate.Month && file.LastWriteTime.Day == transactionDate.Day)
                             {
                                 wasFound = true;
+
+                                if (bankConfiguration.Bank == Bank.ATLANTIDAD)
+                                {
+                                    using (var memoryStream = new MemoryStream())
+                                    {
+                                        string filePath = file.FullName;
+
+                                        client.DownloadFile(filePath, memoryStream); 
+                                        byte[] fileBytes = memoryStream.ToArray();
+                                        string base64String = Convert.ToBase64String(fileBytes);
+                                        byte[] decodedBytes = Convert.FromBase64String(base64String);
+
+                                        byte[] decryptedData = DecryptFile(decodedBytes, IMPrivateKeyPath, Password);
+
+                                        ruta = @"" + bankConfiguration.LocalFileRoute + fileName + nameExtension;
+                                        File.WriteAllBytes(ruta, decryptedData);
+                                        response = await SaveTransactions(ruta, bankConfiguration);
+                                        break;
+                                    }
+                                }
+
 
                                 using (var fileStream = File.Create(ruta))
                                 {
@@ -211,6 +239,71 @@ namespace CRM.Features.Accounting.BankStatement
             }
         }
 
+        public static byte[] DecryptFile(byte[] encryptedData, string secretKeyPath, string password)
+        {
+            using (var inputStream = new MemoryStream(encryptedData))
+            using (var keyIn = File.OpenRead(secretKeyPath))
+            using (var outputStream = new MemoryStream())
+            {
+                var pgpFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
+                PgpEncryptedDataList encryptedDataList = null;
+                PgpObject pgpObject = pgpFactory.NextPgpObject();
+
+                if (pgpObject is PgpEncryptedDataList)
+                    encryptedDataList = (PgpEncryptedDataList)pgpObject;
+                else
+                    encryptedDataList = (PgpEncryptedDataList)pgpFactory.NextPgpObject();
+
+                PgpPrivateKey privateKey = null;
+                PgpPublicKeyEncryptedData pbe = null;
+
+                foreach (PgpPublicKeyEncryptedData pked in encryptedDataList.GetEncryptedDataObjects())
+                {
+                    privateKey = FindSecretKey(keyIn, pked.KeyId, password.ToCharArray());
+                    if (privateKey != null)
+                    {
+                        pbe = pked;
+                        break;
+                    }
+                }
+
+                if (privateKey == null)
+                    throw new ArgumentException("Secret key for message not found.");
+
+                using (Stream clearStream = pbe.GetDataStream(privateKey))
+                {
+                    var plainFactory = new PgpObjectFactory(clearStream);
+                    PgpObject message = plainFactory.NextPgpObject();
+
+                    if (message is PgpCompressedData compressedData)
+                    {
+                        var compressedFactory = new PgpObjectFactory(compressedData.GetDataStream());
+                        message = compressedFactory.NextPgpObject();
+                    }
+
+                    if (message is PgpLiteralData literalData)
+                    {
+                        Stream unc = literalData.GetInputStream();
+                        unc.CopyTo(outputStream);
+                    }
+                    else
+                    {
+                        throw new PgpException("Message is not a simple encrypted file.");
+                    }
+                }
+
+                return outputStream.ToArray();
+            }
+        }
+
+        private static PgpPrivateKey FindSecretKey(Stream keyIn, long keyID, char[] pass)
+        {
+            PgpSecretKeyRingBundle secretKeyRingBundle = new PgpSecretKeyRingBundle(PgpUtilities.GetDecoderStream(keyIn));
+            PgpSecretKey secretKey = secretKeyRingBundle.GetSecretKey(keyID);
+
+            return secretKey?.ExtractPrivateKey(pass);
+        }
+
         public string getFilePath(string baseFileName, string serverPath)
         {
             string[] files = Directory.GetFiles(serverPath);
@@ -238,8 +331,22 @@ namespace CRM.Features.Accounting.BankStatement
                 BankStatementDto bankStatementDto = new BankStatementDto();
                 List<MT940Transaction> transactions = ReadMT940File(path,
                                                                     bankConfiguraion.Bank == Bank.BAC ? 15 :
-                                                                    bankConfiguraion.Bank == Bank.BANPAIS ? 11 : 0,
+                                                                    bankConfiguraion.Bank == Bank.BANPAIS ? 11 :
+                                                                    bankConfiguraion.Bank == Bank.FICOHSA ? 16 :
+                                                                    bankConfiguraion.Bank == Bank.ATLANTIDAD ? 11 : 0,
                                                                     bankConfiguraion);
+
+
+                if(transactions.Where(x => string.IsNullOrEmpty(x.TrasactionCode)).Count() > 0)
+                {
+                    return EntityResponse.CreateError<BankStatementDto>($"{bankConfiguraion.Bank}: No se pudieron obtener todos los codigos de transacción.");
+                }
+
+                if (bankConfiguraion.Bank == Bank.ATLANTIDAD && transactions.Where(x => !long.TryParse(x.TrasactionCode, out _)).Count() > 0)
+                {
+                    return EntityResponse.CreateError<BankStatementDto>($"{bankConfiguraion.Bank}: Se encontrarón codigos de transacción inválidos.");
+                }
+
                 if (transactions.Count > 0)
                 {
                     DateTime transactionDate = transactions.OrderByDescending(x => x.Date).FirstOrDefault().Date;
@@ -270,11 +377,15 @@ namespace CRM.Features.Accounting.BankStatement
                     foreach (MT940Transaction transaction in transactions)
                     {
                         bool esInteres = false;
-                        if (transaction.Description.Substring(0, 2).Equals("3Y"))
+
+                        if(transaction.Description.Length >= 2)
                         {
-                            if (transaction.Description.Contains("INTERESES"))
+                            if (transaction.Description.Substring(0, 2).Equals("3Y"))
                             {
-                                esInteres = true;
+                                if (transaction.Description.Contains("INTERESES"))
+                                {
+                                    esInteres = true;
+                                }
                             }
                         }
 
@@ -393,7 +504,7 @@ namespace CRM.Features.Accounting.BankStatement
                             currentTransaction.Reference = parts[1].Substring(2).Replace(" ", "");
                         }
 
-                        if (bankConfiguration.Bank == Bank.BANPAIS)
+                        if (bankConfiguration.Bank == Bank.BANPAIS) //quitar cuando Banpais haya hecho la modificación
                         {
                             currentTransaction.TrasactionCode = parts[1].Substring(3, 3);
                         }
@@ -402,8 +513,30 @@ namespace CRM.Features.Accounting.BankStatement
                     {
                         if (currentTransaction != null)
                         {
-                            currentTransaction.Description = line.Substring(4);
-                            currentTransaction.TrasactionCode ??= currentTransaction.Description.Substring(0, 2);
+                            string description = line.Substring(4);
+                            currentTransaction.TrasactionCode = bankConfiguration.Bank == Bank.ATLANTIDAD ? description.Substring(0, 6) :
+                                                                currentTransaction.TrasactionCode == null ? description.Substring(0, 2) : currentTransaction.TrasactionCode;
+
+                            currentTransaction.Description = description.Replace(currentTransaction.TrasactionCode, "");
+
+
+                            /*if (bankConfiguration.Bank == Bank.BANPAIS) //usar cuando Banpais haya hecho la modificación
+                            {
+                                string descriptionLine = currentTransaction.Description;
+
+                                int i = 0;
+                                while (i < descriptionLine.Length && char.IsDigit(descriptionLine[i]))
+                                {
+                                    i++;
+                                }
+                                if (i > 0)
+                                {
+                                    currentTransaction.TrasactionCode = descriptionLine.Substring(0, i);
+                                }
+
+                                currentTransaction.Description = (line.Substring(4).Replace("-", "")).Substring(i);
+                            }*/
+
                             currentTransaction = null;
                         }
                     }

@@ -8,6 +8,7 @@ namespace PayWeb.Infrastructure.Core
     public interface IUnitOfWork
     {
         IRepository<T> Repository<T>() where T : class;
+        IRepository<string> StringRepository();
         Task<int> SaveChangesAsync();
         Task BeginTransactionAsync();
         Task RollBackAsync();

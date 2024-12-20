@@ -1,4 +1,6 @@
 ﻿using CRM.Infrastructure.Maps;
+using CRM.Infrastructure.Maps.Accounting;
+using CRM.Infrastructure.Maps.Accounting.CD;
 using CRM.Infrastructure.Maps.Admin;
 using CRM.Infrastructure.Maps.General;
 using CRM.Infrastructure.Users;
@@ -21,11 +23,16 @@ namespace CRM.Infrastructure
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfiguration(new UserMap());
             modelBuilder.ApplyConfiguration(new BankStatementMap());
-            modelBuilder.ApplyConfiguration(new BankStatementDetailsMap());
+            modelBuilder.ApplyConfiguration(new CertificateDepositMap());
             modelBuilder.ApplyConfiguration(new RolesMap());
             modelBuilder.ApplyConfiguration(new BankConfigurationMap());
             modelBuilder.ApplyConfiguration(new UserHomologationMap());
             modelBuilder.ApplyConfiguration(new RoutePathMap());
+            modelBuilder.ApplyConfiguration(new EmailMap());
+            modelBuilder.ApplyConfiguration(new CertificateDepositMap());
+            modelBuilder.ApplyConfiguration(new WeeklyRecordMap());
+            modelBuilder.ApplyConfiguration(new BankStatementDetailsMap());
+            modelBuilder.ApplyConfiguration(new TransactionCodeMap());
         }
     }
 }

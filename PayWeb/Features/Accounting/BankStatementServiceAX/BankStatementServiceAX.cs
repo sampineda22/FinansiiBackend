@@ -17,6 +17,7 @@ namespace CRM.Features.Accounting.BankStatementServiceAX
         public decimal AMOUNTCURCREDIT { get; set; }
         public string ACCOUNTNUM { get; set; }
         public string CompanyId { get; set; }
+        public bool POSTJOURNAL { get;set; }
 
     }
 }

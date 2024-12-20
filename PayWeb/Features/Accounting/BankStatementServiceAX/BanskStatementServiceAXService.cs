@@ -59,6 +59,7 @@ namespace CRM.Features.Accounting.BankStatementServiceAX
                     LINE.ACCOUNTNUM = element.ACCOUNTNUM;
                     LINE.PAYMREFERENCE = element.PAYMREFERENCE;
                     LINE.TRANSDATE = element.TRANSDATE.Day + "/" + element.TRANSDATE.Month + "/" + element.TRANSDATE.Year;
+                    LINE.POSTJOURNAL = element.POSTJOURNAL;
                     LIST.Add(LINE);
                     if (LINE.JOURNALNAMEID == null)
                     {

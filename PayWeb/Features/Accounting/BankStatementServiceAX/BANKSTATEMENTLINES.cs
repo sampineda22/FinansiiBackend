@@ -29,6 +29,8 @@ namespace CRM.Features.Accounting.BankStatementServiceAX
         public decimal AMOUNTCURCREDIT { get; set; }
         [XmlElement]
         public string ACCOUNTNUM { get; set; }
+        [XmlElement]
+        public bool POSTJOURNAL { get; set; }
 
     }
 }

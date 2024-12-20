@@ -13,7 +13,8 @@ namespace CRM.Infrastructure.Enum
             FICOHSA,
             BANPAIS,
             ATLANTIDAD,
-            LAFISE
+            LAFISE,
+            FICOUSD
         }
 
     }
