@@ -70,7 +70,7 @@ namespace CRM.Features.Accounting.BankStatementServiceAX
                 if (TransactionCodeNull != "")
                 {
                     errors.Add($"Transacciones no configuradas para la cuenta {bankStatement.AccountId}: {TransactionCodeNull}");
-                    break;
+                    continue;
                 }
 
                 HEADER.LINES = LIST.ToArray();
