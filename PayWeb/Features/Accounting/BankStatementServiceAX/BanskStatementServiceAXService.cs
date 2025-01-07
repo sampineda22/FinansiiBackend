@@ -67,6 +67,12 @@ namespace CRM.Features.Accounting.BankStatementServiceAX
                     }
                 });
 
+                if(LIST.Count <= 0)
+                {
+                    errors.Add($"No se encontraron transacciones para exportar a AX de la cuenta {bankStatement.AccountId}");
+                    continue;
+                }
+
                 if (TransactionCodeNull != "")
                 {
                     errors.Add($"Transacciones no configuradas para la cuenta {bankStatement.AccountId}: {TransactionCodeNull}");

@@ -16,6 +16,7 @@ using CRM.Features.Accounting.BankStatementDetails;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using System.Text;
 using System.Text.RegularExpressions;
+using OfficeOpenXml;
 
 namespace CRM.Features.Accounting.BankStatement
 {
@@ -610,10 +611,10 @@ namespace CRM.Features.Accounting.BankStatement
 
                             currentTransaction.TrasactionCode = bankConfiguration.Bank == Bank.FICOHSA ? ReadSection(reader, line).Trim() : null;
 
-                            if (bankConfiguration.Bank == Bank.BANPAIS) //quitar if cuando Banpais haya hecho la modificación
+                            /*if (bankConfiguration.Bank == Bank.BANPAIS) //quitar if cuando Banpais haya hecho la modificación
                             {
                                 currentTransaction.TrasactionCode = parts[1].Substring(3, 3);
-                            }
+                            }*/
 
                             fs.Seek(currentPosition, SeekOrigin.Begin);
                             reader.DiscardBufferedData();
@@ -631,8 +632,8 @@ namespace CRM.Features.Accounting.BankStatement
                                 description = description.Replace("NO:", "").Trim();
                                 description = description.Replace("          ", " ");
                                 
-                                //line.Substring(4);
                                 currentTransaction.TrasactionCode = bankConfiguration.Bank == Bank.ATLANTIDAD ? description.Substring(0, 6) :
+                                                                    bankConfiguration.Bank == Bank.BANPAIS ? GetTransactionCodeBP(description) :
                                                                     currentTransaction.TrasactionCode == null ? description.Substring(0, 2) : currentTransaction.TrasactionCode;
 
                                 currentTransaction.Description = description.Replace(currentTransaction.TrasactionCode, "");
@@ -669,6 +670,56 @@ namespace CRM.Features.Accounting.BankStatement
                 Console.WriteLine($"Error reading file: {ex.Message}");
                 return null;
             }
+        }
+
+        public string GetTransactionCodeBP(string line)
+        {
+            string code = "";
+            try
+            {
+                List<TransactionCode> codes = new ();
+
+                line = line.Substring(0, 30); 
+                line = Regex.Replace(line, @"\d", "");
+
+                string filePath = "\\\\gim-ser-finanzas\\MT940\\Codigos de Transacciones.xlsx";
+
+                // EPPlus License Requirement
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+                using (var package = new ExcelPackage(new FileInfo(filePath)))
+                {
+                    var worksheet = package.Workbook.Worksheets[0];
+
+                    int row = 2;
+                    while (true)
+                    {
+                        var transactionCode = worksheet.Cells[row, 1].Text;
+                        var description = worksheet.Cells[row, 2].Text;
+                        var type = worksheet.Cells[row, 3].Text;
+
+                        if (string.IsNullOrEmpty(transactionCode) && string.IsNullOrEmpty(description) && string.IsNullOrEmpty(type))
+                        {
+                            break;
+                        }
+
+                        codes.Add(new TransactionCode{
+                            BankAccountId= Bank.BANPAIS.ToString(),
+                            Code= transactionCode,
+                            Description = description.Replace(" ", "").ToUpper(),
+                            TransactionType = type
+                        });
+                        row++;
+                    }
+                }
+
+                code = codes.Find(x => x.Description == line.Replace(" ", "").ToUpper()).Code;
+            }
+            catch(Exception ex){
+                Console.WriteLine($"Error reading file: {ex.Message}");
+            }
+
+            return code;
         }
 
         public static string ReadSection(StreamReader reader, string initialLine)

@@ -82,7 +82,7 @@ namespace CRM.Features.Credits.ReceiptBreakdownReport
                         new SqlParameter("@DataAreaId", companyCode),
                         new SqlParameter("@DataAreaOfAgent", salesAgent.AgentCompanyCode),
                     };
-                    List<WorkPaper> workPaperDetails = _unitOfWork.Repository<WorkPaper>().GetSP<WorkPaper>("[Finansii].[WorkpaperReport]", parameters).ToList();
+                    List<WorkPaper> workPaperDetails = _unitOfWork.Repository<WorkPaper>().GetSP<WorkPaper>("[Finansii].[WorkpaperReport]", parameters, 250).ToList();
 
                     if(workPaperDetails.Count > 0)
                     {
