@@ -24,8 +24,8 @@ namespace CRM.Features.Accounting.BankStatement
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly BankStatementDetailsAppService _bankStatementDetailsAppService;
-        private static string IMPrivateKeyPath = @"//10.100.2.30//Host to Host//llavesecIMProd.asc"; //@"C://Users//spineda//Desktop//llavesec.asc";
-        private static string Password = "$,0mx&J5U/%4"; //"B9FU-r1G5y+!";
+        private static string IMPrivateKeyPath = @"//10.100.2.30//Host to Host//llavesecIMProd.asc"; 
+        private static string Password = "$,0mx&J5U/%4"; 
 
         public BankStatementAppService(IUnitOfWork unitOfWork, BankStatementDetailsAppService bankStatementDetailsAppService)
         {
@@ -69,11 +69,11 @@ namespace CRM.Features.Accounting.BankStatement
 
             if(account == "" || account == null || account == "x")
             {
-                accounts = _unitOfWork.Repository<BankConfiguration.BankConfiguration>().Query().Where(x => x.ActiveState == true).ToList();
+                accounts = _unitOfWork.Repository<BankConfiguration.BankConfiguration>().Query().Where(x => x.ActiveState == true && x.CompanyId == companyCode).ToList();
             }
             else
             {
-                accounts = _unitOfWork.Repository<BankConfiguration.BankConfiguration>().Query().Where(x => x.AccountId == account).ToList();
+                accounts = _unitOfWork.Repository<BankConfiguration.BankConfiguration>().Query().Where(x => x.AccountId == account && x.CompanyId == companyCode).ToList();
             }
 
             foreach (BankConfiguration.BankConfiguration bankAccount in accounts)
@@ -104,6 +104,8 @@ namespace CRM.Features.Accounting.BankStatement
                     errors.Add($"No se encontro una configuracion para la cuenta {bankAccount.AccountId}.");
                     continue;
                 }
+
+                //response = await SaveTransactions(@"\\gim-ser-finanzas\MT940\Ficohsa\FICOHSA\Intermoda_021102000000101963_MSG.2089383033.txt", bankConfiguraion);
 
                 List<string> filesMT940 = new List<string>();
                 using (var client = new SftpClient(bankConfiguraion.Host, bankConfiguraion.Port, bankConfiguraion.UserName, bankConfiguraion.Password))
@@ -137,10 +139,20 @@ namespace CRM.Features.Accounting.BankStatement
                             {
                                 response = IterateFilesAndSaveTransactions(files, transactionDate, bankConfiguraion, client, bankConfiguraion.FileName.Length, bankConfiguraion.FileName, $".txt").Result;
                             }
+                            else if (bankConfiguraion.Bank == Bank.BANRURAL)
+                            {
+                                fileName = $"{transactionDate.Year}{transactionDate.Month.ToString("D2")}{transactionDate.Day.ToString("D2")}{bankConfiguraion.FileName}";
+                                response = IterateFilesAndSaveTransactions(files, transactionDate, bankConfiguraion, client, fileName.Length, fileName, $".txt").Result;
+                            }
+                            else if (bankConfiguraion.Bank == Bank.BANCO_INDUSTRIAL)
+                            {
+                                fileName = $"F{transactionDate.Day.ToString("D2")}{transactionDate.Month.ToString("D2")}{transactionDate.Year}{bankConfiguraion.FileName}";
+                                response = IterateFilesAndSaveTransactions(files, transactionDate, bankConfiguraion, client, fileName.Length, fileName, $".txt").Result;
+                            }
 
                             if (!response.Ok)
                             {
-                                errors.Add(response.Mensaje);
+                                errors.Add($"{bankConfiguraion.AccountId}: {response.Mensaje} ");
                             }
                             else
                             {
@@ -151,7 +163,8 @@ namespace CRM.Features.Accounting.BankStatement
                     }
                     catch (Exception ex)
                     {
-                        return EntityResponse.CreateError($"Error al acceder al sftp:  {ex.Message}.");
+                        errors.Add($"{bankConfiguraion.Bank}: Error al acceder al SFTP. {ex.Message}");
+                        continue;
                     }
                 }
             }
@@ -163,7 +176,7 @@ namespace CRM.Features.Accounting.BankStatement
                 return EntityResponse.CreateError(error);
             }
 
-            return EntityResponse.CreateOk(bankStatementDtos);
+            return EntityResponse.CreateOk($"Se generaron los BankStatements con los Ids:{string.Join(", ", bankStatementDtos.Select(p => p.BankStatementId))}");
         }
 
         public async Task<EntityResponse<BankStatementDto>> IterateFilesAndSaveTransactions(IEnumerable<ISftpFile> files, DateTime transactionDate, BankConfiguration.BankConfiguration bankConfiguration, 
@@ -189,7 +202,7 @@ namespace CRM.Features.Accounting.BankStatement
                             {
                                 wasFound = true;
 
-                                if (bankConfiguration.Bank == Bank.ATLANTIDAD)
+                                if (bankConfiguration.Bank == Bank.ATLANTIDAD || bankConfiguration.Bank == Bank.BANCO_INDUSTRIAL)
                                 {
                                     using (var memoryStream = new MemoryStream())
                                     {
@@ -209,7 +222,6 @@ namespace CRM.Features.Accounting.BankStatement
                                     }
                                 }
 
-
                                 using (var fileStream = File.Create(ruta))
                                 {
                                     client.DownloadFile(file.FullName, fileStream);
@@ -226,6 +238,10 @@ namespace CRM.Features.Accounting.BankStatement
                 if (!wasFound)
                 {
                     ruta = getFilePath(fileName + nameExtension, bankConfiguration.LocalFileRoute);
+                    if(ruta == null || ruta == "")
+                    {
+                        return EntityResponse.CreateError<BankStatementDto>("No se encontró el archivo.");
+                    }
                     response = await SaveTransactions(ruta, bankConfiguration);
                 }
 
@@ -316,7 +332,8 @@ namespace CRM.Features.Accounting.BankStatement
             {
                 string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
 
-                string fileNameTrimmed = fileNameWithoutExtension.Substring(0, 47).Trim();
+                int amountCharacters = fileNameWithoutExtension.Length;
+                string fileNameTrimmed = amountCharacters >= 47 ? fileNameWithoutExtension.Substring(0, 47).Trim() : fileNameWithoutExtension;
 
                 if (fileNameTrimmed.Equals(baseFileNameWithoutExtension))
                 {
@@ -334,8 +351,8 @@ namespace CRM.Features.Accounting.BankStatement
                 BankStatementDto bankStatementDto = new BankStatementDto();
                 List<MT940Transaction> transactions = ReadMT940File(path,
                                                                     (bankConfiguraion.Bank == Bank.BAC || bankConfiguraion.Bank == Bank.FICOHSA) ? 15 :
-                                                                    (bankConfiguraion.Bank == Bank.BANPAIS || bankConfiguraion.Bank == Bank.ATLANTIDAD) ? 11 : 0,
-                                                                    bankConfiguraion).Result;
+                                                                    (bankConfiguraion.Bank == Bank.BANPAIS || bankConfiguraion.Bank == Bank.ATLANTIDAD || bankConfiguraion.Bank == Bank.BANCO_INDUSTRIAL || bankConfiguraion.Bank == Bank.BANRURAL) ? 11 : 0,
+                                                                     bankConfiguraion).Result;
 
                 if(transactions.Where(x => string.IsNullOrEmpty(x.TrasactionCode)).Count() > 0)
                 {
@@ -361,6 +378,9 @@ namespace CRM.Features.Accounting.BankStatement
                     if (bankStatementDto == null)
                     {
                         return EntityResponse.CreateError<BankStatementDto>($"{bankConfiguraion.Bank}: Los datos para crear estado de cuenta son obligatorios.");
+                    }else if(bankStatementDto.Account == "")
+                    {
+                        return EntityResponse.CreateError<BankStatementDto>($"{bankConfiguraion.Bank}: El número de cuenta del archivo no concuerda con el número de cuenta configurado.");
                     }
 
                     BankStatement bankStatement = new BankStatement
@@ -378,14 +398,11 @@ namespace CRM.Features.Accounting.BankStatement
                     {
                         bool esInteres = false;
 
-                        if(transaction.Description.Length >= 2)
+                        if (transaction.TrasactionCode.Equals("3Y"))
                         {
-                            if (transaction.Description.Substring(0, 2).Equals("3Y"))
+                            if (transaction.Description.Contains("INTERESES"))
                             {
-                                if (transaction.Description.Contains("INTERESES"))
-                                {
-                                    esInteres = true;
-                                }
+                                esInteres = true;
                             }
                         }
 
@@ -461,94 +478,6 @@ namespace CRM.Features.Accounting.BankStatement
                         Status = u.Status,
                     }).FirstOrDefault();
         }
-        /*private List<MT940Transaction> ReadMT940File(string filePath, int amountSubstring, BankConfiguration.BankConfiguration bankConfiguration)
-        {
-            List<MT940Transaction> transactions = new List<MT940Transaction>();
-            string account = "", currencyCode = "";
-            int typeSubstring = amountSubstring - 1;
-
-            using (StreamReader reader = new StreamReader(filePath))
-            {
-                string line;
-                MT940Transaction currentTransaction = null;
-
-                while ((line = reader.ReadLine()) != null)
-                {
-                    if (line.StartsWith(":60F:"))
-                    {
-                        currencyCode = line.Substring(12, 3);
-                    }
-                    if (line.StartsWith(":25:"))
-                    {
-                        account = line.Substring(4);
-                    }
-                    if (line.StartsWith(":61:"))
-                    {                        
-                        currentTransaction = new MT940Transaction();
-                        transactions.Add(currentTransaction);
-
-                        string[] parts = line.Split(',');
-                        if (parts.Length >= 2)
-                        {
-                            decimal amount = decimal.Parse(parts[0].Substring(amountSubstring)) + decimal.Parse(parts[1].Substring(0, 2)) / 100;
-
-                            currentTransaction.Account = account;
-                            currentTransaction.CurrencyCode = currencyCode;
-                            var date = "20" + parts[0].Substring(4, 6);
-                            var year = int.Parse(date.Substring(0, 4));
-                            var month = int.Parse(date.Substring(4, 2));
-                            var day = int.Parse(date.Substring(6, 2));
-                            currentTransaction.Date = new DateTime(year, month, day);
-                            currentTransaction.Amount = amount;
-                            currentTransaction.Type = parts[0].Substring(typeSubstring, 1);
-                            currentTransaction.Reference = parts[1].Substring(2).Replace(" ", "");
-                        }
-
-                        if (bankConfiguration.Bank == Bank.BANPAIS) //quitar if cuando Banpais haya hecho la modificación
-                        {
-                            currentTransaction.TrasactionCode = parts[1].Substring(3, 3);
-                        }
-                    }
-                    else if (line.StartsWith(":86:"))
-                    {
-                        string section = ""; // ReadSection(reader, line);
-                        section = section.Replace("BEN: ORD: CHQ NO: ", "").Replace("  ", " ");
-
-                        if (currentTransaction != null)
-                        {
-                            string description = section.Substring(4); //line.Substring(4);
-                            currentTransaction.TrasactionCode = bankConfiguration.Bank == Bank.ATLANTIDAD ? description.Substring(0, 6) :
-                                                                currentTransaction.TrasactionCode == null ? description.Substring(0, 2) : currentTransaction.TrasactionCode;
-
-                            currentTransaction.Description = description.Replace(currentTransaction.TrasactionCode, "");
-
-
-                            //if (bankConfiguration.Bank == Bank.BANPAIS) //usar cuando Banpais haya hecho la modificación
-                            //{
-                            //    string descriptionLine = currentTransaction.Description;
-
-                            //    int i = 0;
-                            //    while (i < descriptionLine.Length && char.IsDigit(descriptionLine[i]))
-                            //    {
-                            //        i++;
-                            //    }
-                            //    if (i > 0)
-                            //    {
-                            //        currentTransaction.TrasactionCode = descriptionLine.Substring(0, i);
-                            //    }
-
-                            //    currentTransaction.Description = (line.Substring(4).Replace("-", "")).Substring(i);
-                            //}
-
-                            currentTransaction = null;
-                            reader.BaseStream.Seek(2, SeekOrigin.Current);
-                        }
-                    }
-                }
-                reader.Close();
-            }
-            return transactions;
-        }*/
 
         public async Task<List<MT940Transaction>> ReadMT940File(string filePath, int amountSubstring, BankConfiguration.BankConfiguration bankConfiguration)
         {
@@ -583,7 +512,9 @@ namespace CRM.Features.Accounting.BankStatement
                         }
                         if (line.StartsWith(":25:"))
                         {
-                            account = line.Substring(4);
+                            string lineValue = line.Substring(4);
+                            int startIndex = lineValue.IndexOf(bankConfiguration.AccountNumber);
+                            account = startIndex != -1 ? lineValue.Substring(startIndex, bankConfiguration.AccountNumber.Length) : "" ;
                         }
                         if (line.StartsWith(":61:"))
                         {
@@ -606,10 +537,26 @@ namespace CRM.Features.Accounting.BankStatement
                                 currentTransaction.Date = new DateTime(year, month, day);
                                 currentTransaction.Amount = amount;
                                 currentTransaction.Type = parts[0].Substring(typeSubstring, 1);
-                                currentTransaction.Reference = parts[1].Substring(2).Replace(" ", "");
+
+                                int index = parts[1].IndexOf("//");
+
+                                if (bankConfiguration.Bank == Bank.FICOHSA) 
+                                {
+                                    index += 2; //Se coloco 2 para no incluir los //
+                                    currentTransaction.Reference = parts[1].Substring(index).Replace(" ", "");
+
+                                }else if (bankConfiguration.Bank == Bank.BANRURAL)
+                                {
+                                    string reference = parts[1].Substring(0, index);
+                                    currentTransaction.Reference = reference.Substring(6);
+                                }
+                                else
+                                {
+                                    currentTransaction.Reference = parts[1].Substring(/*2*/6).Replace(" ", "");
+                                }
                             }
 
-                            currentTransaction.TrasactionCode = bankConfiguration.Bank == Bank.FICOHSA ? ReadSection(reader, line).Trim() : null;
+                            currentTransaction.TrasactionCode = bankConfiguration.Bank == Bank.FICOHSA ? ReadSection(reader).Trim() : null;
 
                             /*if (bankConfiguration.Bank == Bank.BANPAIS) //quitar if cuando Banpais haya hecho la modificación
                             {
@@ -625,18 +572,24 @@ namespace CRM.Features.Accounting.BankStatement
                             {
                                 StringBuilder section = new();
                                 section.Append(line.Substring(4));
-                                section.Append(ReadSection(reader, line));
+                                section.Append(ReadSection(reader));
 
-                                string description = section.ToString().Replace("BEN: ORD: ", "").Replace("  ", " ");
-                                description = description.Replace("CHQ ", "");
-                                description = description.Replace("NO:", "").Trim();
-                                description = description.Replace("          ", " ");
+                                string description = section.ToString().Replace("BEN: ORD: ", "");
                                 
                                 currentTransaction.TrasactionCode = bankConfiguration.Bank == Bank.ATLANTIDAD ? description.Substring(0, 6) :
                                                                     bankConfiguration.Bank == Bank.BANPAIS ? GetTransactionCodeBP(description) :
+                                                                    bankConfiguration.Bank == Bank.BANCO_INDUSTRIAL ? description.Substring(20, 4) :
+                                                                    description.Contains("(") ? Regex.Replace(description, @"\s*\(.*?\)", "") :
+                                                                    bankConfiguration.Bank == Bank.BANRURAL ? description :
                                                                     currentTransaction.TrasactionCode == null ? description.Substring(0, 2) : currentTransaction.TrasactionCode;
 
-                                currentTransaction.Description = description.Replace(currentTransaction.TrasactionCode, "");
+                                description = description.Replace("CHQ ", "");
+                                description = description.Replace("NO:", "").Trim();
+                                description = description.Replace("  ", " ");
+                                description = description.Replace("          ", " ");
+
+                                string newDescription = description.Replace(currentTransaction.TrasactionCode, "");
+                                currentTransaction.Description = string.IsNullOrEmpty(newDescription) ? currentTransaction.TrasactionCode : newDescription;
 
                                 /*if (bankConfiguration.Bank == Bank.BANPAIS) //usar cuando Banpais haya hecho la modificación
                                 {
@@ -684,7 +637,6 @@ namespace CRM.Features.Accounting.BankStatement
 
                 string filePath = "\\\\gim-ser-finanzas\\MT940\\Codigos de Transacciones.xlsx";
 
-                // EPPlus License Requirement
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
                 using (var package = new ExcelPackage(new FileInfo(filePath)))
@@ -722,20 +674,18 @@ namespace CRM.Features.Accounting.BankStatement
             return code;
         }
 
-        public static string ReadSection(StreamReader reader, string initialLine)
+        public static string ReadSection(StreamReader reader)
         {
             StringBuilder section = new StringBuilder();
-            //section.Append(initialLine.Substring(4));
 
             while (reader.Peek() >= 0)
             {
-                long position = reader.BaseStream.Position;  // Save position
+                long position = reader.BaseStream.Position; 
                 string nextLine = reader.ReadLine();
 
-                // If the next line starts with :, it indicates a new section
                 if (nextLine.StartsWith(":"))
                 {
-                    reader.BaseStream.Seek(position, SeekOrigin.Current);  // Go back to start of next section
+                    reader.BaseStream.Seek(position, SeekOrigin.Current);
                     break;
                 }
 

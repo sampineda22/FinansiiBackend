@@ -1,8 +1,11 @@
 ﻿using CRM.Common;
 using CRM.Features.Credits.ReceiptBreakdown;
 using CRM.Features.Credits.ReceiptDetailBreakdownReport;
+using CRM.Infrastructure;
+using CRM.Infrastructure.Core;
 using IM_CDJournalSG;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Options;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using PayWeb.Common;
@@ -20,12 +23,14 @@ namespace CRM.Features.Accounting.CD
     public class CertificateDepositService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly AXEndpoint _axEndpoint;
         private readonly ReceiptDetailBreakdownService _receiptDetailBreakdownService;
 
-        public CertificateDepositService (IUnitOfWork unitOfWork, ReceiptDetailBreakdownService receiptDetailBreakdownService)
+        public CertificateDepositService (IUnitOfWork unitOfWork, ReceiptDetailBreakdownService receiptDetailBreakdownService, AXEndpoint axEndpoint)
         {
             _unitOfWork = unitOfWork;
             _receiptDetailBreakdownService = receiptDetailBreakdownService;
+            _axEndpoint = axEndpoint;
         }
 
         public async Task<EntityResponse> GetActiveCDBanks(string companyCode)
@@ -450,71 +455,92 @@ namespace CRM.Features.Accounting.CD
             try
             {
                 EntityResponse response = new();
-                List<CDLINES> LIST = new();
                 SqlParameter[] parameters = { };
-                string journal = "";
+                List<string> journals = new();
+                List<string> errors = new();
+                string responseMessage = "", journal = "";
 
-                parameters = new SqlParameter[]
+                List<int> certificatesWithRecords = _unitOfWork.Repository<WeeklyRecord>().Query().Where(x => x.Week == int.Parse(week)).Select(x => x.CertificateId).ToList();
+                List<CertificateDeposit> certificateDeposits = _unitOfWork.Repository<CertificateDeposit>().Query().Where(x => x.isEnabled == true && !certificatesWithRecords.Contains(x.Id)).ToList();
+
+                /*Commented by spineda on may/31/2025 - Begin*/
+                List<string> currencies = certificateDeposits.Select(x => x.Currency).Distinct().ToList();
+
+                foreach(string currency in currencies)
                 {
-                    new SqlParameter("@CompanyCode", companyCode),
-                    new SqlParameter("@FiscalCalendarYear", fiscalYearRecId),
-                    new SqlParameter("@SelectedWeek", week),
-                };
-
-                List<Certificate> certificateList = _unitOfWork.Repository<Certificate>().GetSP<Certificate>("[Finansii].[GetCDJournalLines]", parameters).ToList();
-                certificateList.ForEach(element =>
-                {
-                    CDLINES LINE = new CDLINES();
-                    LINE.CERTIFICATENUMBER = "";
-                    LINE.LEDGERDIMENSION = element.LEDGERDIMENSION;
-                    LINE.TRANSDATE = element.TRANSDATE;
-                    LINE.JOURNALDATE = element.JOURNALDATE;
-                    LINE.LEDGERJOURNALTRANSTXT = element.LEDGERJOURNALTRANSTXT;
-                    LINE.CURRENCYCODE = element.CURRENCYCODE;
-                    LINE.AMOUNTCURDEBIT = element.AMOUNTCURDEBIT;
-                    LINE.AMOUNTCURCREDIT = element.AMOUNTCURCREDIT;
-                    LINE.OFFSETLEDGERDIMENSION = "";
-                    LIST.Add(LINE);
-                });
-
-                if (LIST.Count <= 1)
-                {
-                    return EntityResponse.CreateError("Ya se registraron todos los certificados en la semana seleccionada.");
-                }
-
-                if (LIST.Sum(x => x.AMOUNTCURDEBIT) <= 0)
-                {
-                    return EntityResponse.CreateError("No se pudo calcular el total de intereses.");
-                }
-
-                response = CallService(LIST, companyCode).Result;
-
-                if (response is EntityResponse<string> genericResponse)
-                {
-                    if (!genericResponse.Data.Contains("LD"))
+                    List<CDLINES> LIST = new();
+                    parameters = new SqlParameter[]
                     {
-                        return EntityResponse.CreateError(genericResponse.Data);
-                    }
-
-                    journal = genericResponse.Data;
-                }
-
-                foreach (Certificate certificate in certificateList.FindAll(x => x.ID != 0))
-                {
-                    WeeklyRecord weeklyRecord = new()
-                    {
-                        CertificateId = certificate.ID,
-                        AmountInCurrency = certificate.AMOUNTINCURRENCY,
-                        Amount = certificate.AMOUNTCURDEBIT,
-                        Week = int.Parse(week),
-                        Journal = journal
+                        new SqlParameter("@CompanyCode", companyCode),
+                        new SqlParameter("@FiscalCalendarYear", fiscalYearRecId),
+                        new SqlParameter("@SelectedWeek", week),
+                        new SqlParameter("@CurrencyCode", currency),
                     };
 
-                    _unitOfWork.Repository<WeeklyRecord>().Add(weeklyRecord);
-                    await _unitOfWork.SaveChangesAsync();
+                    List<Certificate> certificateList = _unitOfWork.Repository<Certificate>().GetSP<Certificate>("[Finansii].[GetCDJournalLines]", parameters).ToList();
+                    certificateList.ForEach(element =>
+                    {
+                        CDLINES LINE = new CDLINES();
+                        LINE.CERTIFICATENUMBER = "";
+                        LINE.LEDGERDIMENSION = element.LEDGERDIMENSION;
+                        LINE.TRANSDATE = element.TRANSDATE;
+                        LINE.JOURNALDATE = element.JOURNALDATE;
+                        LINE.LEDGERJOURNALTRANSTXT = element.LEDGERJOURNALTRANSTXT;
+                        LINE.CURRENCYCODE = element.CURRENCYCODE;
+                        LINE.AMOUNTCURDEBIT = element.AMOUNTCURDEBIT;
+                        LINE.AMOUNTCURCREDIT = element.AMOUNTCURCREDIT;
+                        LINE.OFFSETLEDGERDIMENSION = "";
+                        LIST.Add(LINE);
+                    });
+
+                    if (LIST.Count <= 1)
+                    {
+                        errors.Add($"Error en Creación de Diario {currency}: Ya se registraron todos los certificados en la semana seleccionada.");
+                    }
+
+                    if (LIST.Sum(x => x.AMOUNTCURDEBIT) <= 0)
+                    {
+                        errors.Add($"Error en Creación de Diario {currency}: No se pudo calcular el total de intereses.");
+                    }
+
+                    response = CallService(LIST, companyCode).Result;
+
+                    if (response is EntityResponse<string> genericResponse)
+                    {
+                        if (!genericResponse.Data.Contains("LD"))
+                        {
+                            errors.Add($"Error en Creación de Diario {currency}: {genericResponse.Data}");;
+                        }
+                        journal = genericResponse.Data;
+                        journals.Add(journal);
+                    }
+
+                    foreach (Certificate certificate in certificateList.FindAll(x => x.ID != 0))
+                    {
+                        WeeklyRecord weeklyRecord = new()
+                        {
+                            CertificateId = certificate.ID,
+                            AmountInCurrency = certificate.AMOUNTINCURRENCY,
+                            Amount = certificate.AMOUNTCURDEBIT,
+                            Week = int.Parse(week),
+                            Journal = journal
+                        };
+
+                        _unitOfWork.Repository<WeeklyRecord>().Add(weeklyRecord);
+                        await _unitOfWork.SaveChangesAsync();
+                    }
+
+                }
+                /*Commented by spineda on may/31/2025 - End*/
+
+                responseMessage = journals.Count > 0 ? $"Se crearón los siguientes diarios: {string.Join(", ", journals)}. " : "";
+
+                if (errors.Count > 0)
+                {
+                    responseMessage += $"Se generarón los siguientes errores: {string.Join(", ", errors)}";
                 }
 
-                return EntityResponse.CreateOk(journal);
+                return EntityResponse.CreateOk(responseMessage);
             }
             catch (Exception ex)
             {
@@ -572,7 +598,7 @@ namespace CRM.Features.Accounting.CD
                 {
                     return EntityResponse.CreateError("No se pudo obtener el total del CD.");
                 }
-
+                //Cuando se cree el diario final, verificar si esta habilitada la opcion de registrar.
                 response = CallService(LIST, companyCode).Result;
 
                 if (response is EntityResponse<string> genericResponse2)
@@ -609,10 +635,12 @@ namespace CRM.Features.Accounting.CD
 
                 string lines = HEADER.Serialize();
                 IM_CDJournalSG.CallContext context = new() { Company = companyCode };
-                var serviceClient = new M_CDJournalClient(GetBinding(), GetEndpointAddr());
+                var serviceClient = new M_CDJournalClient(_axEndpoint.GetBinding(), _axEndpoint.GetEndpointAddr("IM_CDJournalSG"));
 
-                serviceClient.ClientCredentials.Windows.ClientCredential.UserName = "servicio_ax";
-                serviceClient.ClientCredentials.Windows.ClientCredential.Password = "Int3r-M0d@.aX$3Rv";
+                //serviceClient.ClientCredentials.Windows.ClientCredential.UserName = "servicio_ax";
+                //serviceClient.ClientCredentials.Windows.ClientCredential.Password = "Int3r-M0d@.aX$3Rv";
+
+                serviceClient = (M_CDJournalClient)_axEndpoint.Service(serviceClient);
 
                 string dataValidation = string.Format("<INTEGRATION><COMPANY><CODE>{0}</CODE><USER>{1}</USER></COMPANY></INTEGRATION>", context.Company, "servicio_ax");
                 IM_CDJournalInitRequest request = new IM_CDJournalInitRequest();
@@ -629,7 +657,7 @@ namespace CRM.Features.Accounting.CD
             }
         }
 
-        private NetTcpBinding GetBinding()
+        /*private NetTcpBinding GetBinding()
         {
             var netTcpBinding = new NetTcpBinding();
             netTcpBinding.Name = "NetTcpBinding_IM_WMSCreateJournalServices";
@@ -649,7 +677,7 @@ namespace CRM.Features.Accounting.CD
             var addrHdrs = new AddressHeader[0];
             var endpointAddr = new EndpointAddress(uri, addrHdrs); //, epid, addrHdrs);
             return endpointAddr;
-        }
+        }*/
 
         public static string GetNextColumn(string currentColumn)
         {

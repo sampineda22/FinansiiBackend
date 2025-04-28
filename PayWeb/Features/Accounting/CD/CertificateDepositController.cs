@@ -86,7 +86,6 @@ namespace CRM.Features.Accounting.CD
             return Ok(response);
         }
 
-        [Authorize]
         [HttpPost("PostCertificateDeposit")]
         public async Task<IActionResult> PostCertificateDeposit([FromBody] CertificateDeposit certificate)
         {
@@ -98,7 +97,6 @@ namespace CRM.Features.Accounting.CD
             return Ok(response);
         }
 
-        [Authorize]
         [HttpPost("PostWeeklyJournal/{companyCode}/{fiscalYearId}/{week}")]
         public async Task<IActionResult> PostWeeklyJournal(string companyCode, string fiscalYearId, string week)
         {
@@ -110,7 +108,6 @@ namespace CRM.Features.Accounting.CD
             return Ok(response);
         }
 
-        [Authorize]
         [HttpPost("PostFinalJournal/{companyCode}/{certificateId}")]
         public async Task<IActionResult> PostFinalJournal(string companyCode, int certificateId)
         {
@@ -122,7 +119,6 @@ namespace CRM.Features.Accounting.CD
             return Ok(response);
         }
 
-        [Authorize]
         [HttpDelete("DeleteCertificate/{id}")]
         public async Task<IActionResult> DeleteCertificate(int id)
         {

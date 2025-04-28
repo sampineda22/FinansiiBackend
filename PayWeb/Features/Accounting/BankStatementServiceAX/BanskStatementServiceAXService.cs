@@ -1,19 +1,15 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 
-using System.IO;
-using System.Security.Cryptography;
-using System.Text;
 using PayWeb.Common;
 using System.Collections.Generic;
 using PayWeb.Infrastructure.Core;
 using Microsoft.Data.SqlClient;
 using CRM.Common;
 using ServiceReference1;
-using System.ServiceModel;
 using System;
-using System.ServiceModel.Channels;
 using CRM.Features.Accounting.BankStatement;
+using CRM.Infrastructure;
 
 namespace CRM.Features.Accounting.BankStatementServiceAX
 {
@@ -21,11 +17,13 @@ namespace CRM.Features.Accounting.BankStatementServiceAX
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly BankStatementAppService _bankStatementAppService;
+        private readonly AXEndpoint _axEndpoint;
 
-        public BanskStatementServiceAXService(IUnitOfWork unitOfWork, BankStatementAppService bankStatementAppService)
+        public BanskStatementServiceAXService(IUnitOfWork unitOfWork, BankStatementAppService bankStatementAppService, AXEndpoint axEndpoint)
         {
             _unitOfWork = unitOfWork;
             _bankStatementAppService = bankStatementAppService;
+            _axEndpoint = axEndpoint;
         }
 
         public async Task<EntityResponse> SendBankStatement(string bankStatements)
@@ -38,13 +36,14 @@ namespace CRM.Features.Accounting.BankStatementServiceAX
             {
                 BANKSTATEMENTHEAD HEADER = new BANKSTATEMENTHEAD();
                 List<BANKSTATEMENTLINES> LIST = new List<BANKSTATEMENTLINES>();
+                
+                BankStatement.BankStatement bankStatement = _unitOfWork.Repository<BankStatement.BankStatement>().Query().Where(x => x.BankStatementId == BankStatementID).FirstOrDefault();
 
                 SqlParameter[] parameters =
                 {
-                  new SqlParameter("@BankStatementId",BankStatementID)
+                  new SqlParameter("@BankStatementId",BankStatementID),
+                  new SqlParameter("@CompanyCode",bankStatement.CompanyId)
                 };
-
-                BankStatement.BankStatement bankStatement = _unitOfWork.Repository<BankStatement.BankStatement>().Query().Where(x => x.BankStatementId == BankStatementID).FirstOrDefault();
 
                 var data = _unitOfWork.Repository<BankStatementServiceAX>().GetSP<BankStatementServiceAX>("IM_GetBankstatementLines", parameters).ToList();
                 string TransactionCodeNull = "";
@@ -53,7 +52,7 @@ namespace CRM.Features.Accounting.BankStatementServiceAX
                     BANKSTATEMENTLINES LINE = new BANKSTATEMENTLINES();
                     LINE.JOURNALNAMEID = element.JOURNALNAMEID;
                     LINE.CURRENCYCODE = element.CURRENCYCODE;
-                    LINE.LEDGERJOURNALTRANSTXT = element.LEDGERJOURNALTRANSTXT;
+                    LINE.LEDGERJOURNALTRANSTXT = element.LEDGERJOURNALTRANSTXT.Replace(" ", "") == "" ? "Sin descripción." : element.LEDGERJOURNALTRANSTXT;
                     LINE.AMOUNTCURDEBIT = element.AMOUNTCURDEBIT;
                     LINE.AMOUNTCURCREDIT = element.AMOUNTCURCREDIT;
                     LINE.ACCOUNTNUM = element.ACCOUNTNUM;
@@ -83,10 +82,12 @@ namespace CRM.Features.Accounting.BankStatementServiceAX
 
                 string BankStatementLines = HEADER.Serialize();
                 CallContext context = new CallContext { Company = data[0].CompanyId };
-                var serviceClient = new M_BankStatementClient(GetBinding(), GetEndpointAddr());
+                var serviceClient = new M_BankStatementClient(_axEndpoint.GetBinding(), _axEndpoint.GetEndpointAddr("IM_BankStatementGP"));
 
-                serviceClient.ClientCredentials.Windows.ClientCredential.UserName = "servicio_ax";
-                serviceClient.ClientCredentials.Windows.ClientCredential.Password = "Int3r-M0d@.aX$3Rv";
+                //serviceClient.ClientCredentials.Windows.ClientCredential.UserName = "servicio_ax";
+                //serviceClient.ClientCredentials.Windows.ClientCredential.Password = "Int3r-M0d@.aX$3Rv";
+
+                serviceClient = (M_BankStatementClient)_axEndpoint.Service(serviceClient);
 
                 try
                 {
@@ -97,8 +98,15 @@ namespace CRM.Features.Accounting.BankStatementServiceAX
                     request._lineXML = BankStatementLines;
                     var resp = serviceClient.initAsync(request);
 
-                    await _bankStatementAppService.UpdateStatus(BankStatementID, Infrastructure.Enum.BankStatementStatus.BankStatatementState.Processed);
-                    responses.Add($"{bankStatement.AccountId}: {resp.Result.response}.");
+                    if (resp.Result.response.Contains("LD"))
+                    {
+                        await _bankStatementAppService.UpdateStatus(BankStatementID, Infrastructure.Enum.BankStatementStatus.BankStatatementState.Processed);
+                        responses.Add($"{bankStatement.AccountId}: {resp.Result.response}.");
+                    }
+                    else
+                    {
+                        errors.Add($"{bankStatement.AccountId}: {resp.Result.response}.");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -114,7 +122,7 @@ namespace CRM.Features.Accounting.BankStatementServiceAX
 
             return EntityResponse.CreateOk(string.Join(" ", responses));
         }
-        private NetTcpBinding GetBinding()
+        /*private NetTcpBinding GetBinding()
         {
             var netTcpBinding = new NetTcpBinding();
             netTcpBinding.Name = "NetTcpBinding_IM_WMSCreateJournalServices";
@@ -133,6 +141,6 @@ namespace CRM.Features.Accounting.BankStatementServiceAX
             var addrHdrs = new AddressHeader[0];
             var endpointAddr = new EndpointAddress(uri, addrHdrs); //, epid, addrHdrs);
             return endpointAddr;
-        }
+        }*/
     }
 }

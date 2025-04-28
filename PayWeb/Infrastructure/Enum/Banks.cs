@@ -14,7 +14,9 @@ namespace CRM.Infrastructure.Enum
             BANPAIS,
             ATLANTIDAD,
             LAFISE,
-            FICOUSD
+            FICOUSD,
+            BANCO_INDUSTRIAL,
+            BANRURAL
         }
 
     }

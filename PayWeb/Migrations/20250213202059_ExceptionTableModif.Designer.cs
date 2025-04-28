@@ -4,14 +4,16 @@ using CRM.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CRM.Migrations
 {
     [DbContext(typeof(IMFinanzasContext))]
-    partial class IMFinanzasContextModelSnapshot : ModelSnapshot
+    [Migration("20250213202059_ExceptionTableModif")]
+    partial class ExceptionTableModif
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -167,8 +169,8 @@ namespace CRM.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
+                        .HasMaxLength(125)
+                        .HasColumnType("nvarchar(125)");
 
                     b.Property<string>("Reference")
                         .IsRequired()

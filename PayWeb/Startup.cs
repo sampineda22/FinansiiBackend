@@ -23,7 +23,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PayWeb.Features.Security;
 using PayWeb.Features.Users;
-using PayWeb.Infrastructure;
 using PayWeb.Infrastructure.Core;
 
 namespace PayWeb
@@ -53,7 +52,7 @@ namespace PayWeb
                 options.AddPolicy(name: CorsOrigins,
                                   builder =>
                                   {
-                                      builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                                      builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
                                   });
                
             });
@@ -113,6 +112,7 @@ namespace PayWeb
             //Reportes
             services.AddHttpContextAccessor();
 
+
             services.AddDbContext<PayWebContext>(o => {
                 o.UseSqlServer(Configuration.GetConnectionString("PayWeb"));
             });
@@ -138,6 +138,9 @@ namespace PayWeb
                 return new UnitOfWorkPayroll(db);
             });
 
+            services.Configure<AXConnectionSettings>(Configuration.GetSection("AXConnection"));
+            services.AddScoped<AXEndpoint>();
+
             services.AddScoped<UserAppService>();
             services.AddScoped<RolesService>();
             services.AddScoped<BankStatementAppService>();
@@ -157,7 +160,9 @@ namespace PayWeb
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-            }           
+            }
+
+            app.UseCors(CorsOrigins);
 
             app.UseHttpsRedirection();
 
@@ -169,7 +174,7 @@ namespace PayWeb
             });
 
             app.UseRouting();
-            app.UseCors(CorsOrigins);
+            //app.UseCors(CorsOrigins);
 
             app.UseAuthentication();
             app.UseAuthorization();

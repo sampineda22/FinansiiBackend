@@ -1,16 +1,14 @@
-﻿using CRM.Features.Accounting.BankStatement;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using PayWeb.Common;
 using PayWeb.Features.Users;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -19,18 +17,20 @@ namespace PayWeb.Features.Security
 {
     [Route("[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class SecurityController : ControllerBase
     {
         private readonly ILogger<SecurityController> _logger;
         private readonly UserAppService _userService;
         private readonly IJwtAuthManager _jwtAuthManager;
+        private readonly IConfiguration _configuration;
 
-        public SecurityController(ILogger<SecurityController> logger, UserAppService userAppService, IJwtAuthManager jwtAuthManager)
+        public SecurityController(ILogger<SecurityController> logger, UserAppService userAppService, IJwtAuthManager jwtAuthManager, IConfiguration configuration)
         {
             this._userService = userAppService;
             _logger = logger;
             _jwtAuthManager = jwtAuthManager;
+            _configuration = configuration;
         }
 
         [AllowAnonymous]
@@ -42,24 +42,15 @@ namespace PayWeb.Features.Security
                 return BadRequest();
             }
 
-            if (!_userService.IsValidUserCredentials(request.User.ToLower(), request.Password))
-            {
-                return Unauthorized();
-            }
+            string connectionString = _configuration.GetConnectionString("IMFinanzas");
 
-            /*if (!_userService.IsAnExistingUser(request.User))
+            if (!connectionString.ToLower().Contains("imfinanzasdev"))
             {
-                EntityResponse response = new EntityResponse
+                if (!_userService.IsValidUserCredentials(request.User.ToLower(), request.Password))
                 {
-                    Ok = false,
-                    Mensaje = "El usuario no esta registrado en la aplicacion"
-                };
-
-                if (!response.Ok)
-                {
-                    return BadRequest(response);
+                    return Unauthorized();
                 }
-            }*/
+            }
 
             request.CompanyCode = _userService.FindByUserId(request.User).CompanyCode;
 

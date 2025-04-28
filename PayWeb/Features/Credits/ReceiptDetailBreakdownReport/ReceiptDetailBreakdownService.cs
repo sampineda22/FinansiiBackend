@@ -163,7 +163,7 @@ namespace CRM.Features.Credits.ReceiptBreakdown
 
                             advanceTableRow = tableRow + spaceBetweenTables;
 
-                            parameters = new SqlParameter[]
+                            /*parameters = new SqlParameter[]
                             {
                             new SqlParameter("@SalesAgent", agent.PersonalCode),
                             new SqlParameter("@StartDate", startDate),
@@ -172,17 +172,17 @@ namespace CRM.Features.Credits.ReceiptBreakdown
                             };
                             List<AppliedAdvance> appliedAdvances = _unitOfWork.Repository<AppliedAdvance>().GetSP<AppliedAdvance>("[Finansii].[GetAdvancesWithInvoices]", parameters).ToList();
 
-                            /*foreach (AppliedAdvance appliedAdvance in appliedAdvances)
+                            foreach (AppliedAdvance appliedAdvance in appliedAdvances)
                             {//Esta comentado hasta que se resuelva lo de los anticipos
                                 targetWorksheet.Cells[$"B{advanceTableRow}"].Value = appliedAdvance.AdvanceReceipt;
                                 targetWorksheet.Cells[$"C{advanceTableRow}"].Value = appliedAdvance.AppliedAdvanceAmount;
                                 targetWorksheet.Cells[$"C{advanceTableRow}"].Style.Numberformat.Format = "#,##0.00";
                                 targetWorksheet.Cells[$"C{advanceTableRow}"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
-                                targetWorksheet.Cells[$"D{advanceTableRow}"].Value = appliedAdvance.Invoice;
+                                targetWorksheet.Cells[$"D{advanceTableRow}"].Value = appliedAdvance.Invoice;*/
 
                                 advanceTableRow++;
                                 targetWorksheet.InsertRow(advanceTableRow, 1);
-                            }*/
+                            /*}*/ // Esta comentado hasta que se resuelva lo de los anticipos
 
                             targetWorksheet.DeleteRow(advanceTableRow, 1);
 
@@ -204,8 +204,8 @@ namespace CRM.Features.Credits.ReceiptBreakdown
 
                             package.Save();
                         }
-
-                          _workpaperReportService.ConvertExcelToPdf(excelPath, pdfFilePath);
+                        
+                        _workpaperReportService.ConvertExcelToPdf(excelPath, pdfFilePath);
                         File.Delete(excelPath);
                     }
                 }

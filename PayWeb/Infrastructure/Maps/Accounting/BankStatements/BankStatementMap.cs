@@ -1,16 +1,12 @@
 ﻿using CRM.Features.Accounting.BankStatement;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace CRM.Infrastructure.Maps
+namespace CRM.Infrastructure.Maps.Accounting.BankStatements
 {
-    public class BankStatementMap : IEntityTypeConfiguration<BankStatement>
+    public class BankStatementMap : IEntityTypeConfiguration<CRM.Features.Accounting.BankStatement.BankStatement>
     {
-        public void Configure(EntityTypeBuilder<BankStatement> builder)
+        public void Configure(EntityTypeBuilder<CRM.Features.Accounting.BankStatement.BankStatement> builder)
         {
             builder.ToTable("BankStatement", "Finansii");
             builder.HasKey(e => e.BankStatementId);

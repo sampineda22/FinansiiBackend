@@ -84,7 +84,7 @@ namespace CRM.Features.Credits.ReceiptBreakdownReport
                     };
                     List<WorkPaper> workPaperDetails = _unitOfWork.Repository<WorkPaper>().GetSP<WorkPaper>("[Finansii].[WorkpaperReport]", parameters, 250).ToList();
 
-                    if(workPaperDetails.Count > 0)
+                     if(workPaperDetails.Count > 0)
                     {
                         response = GetReportsFolderPath(companyCode, startDate, serverPath, "Cédulas de Asesores de Venta", salesAgent.Name, week, weekNumber).Result;
 

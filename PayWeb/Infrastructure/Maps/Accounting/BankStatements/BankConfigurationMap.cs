@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CRM.Infrastructure.Maps
+namespace CRM.Infrastructure.Maps.Accounting.BankStatement
 {
     public class BankConfigurationMap : IEntityTypeConfiguration<BankConfiguration>
     {

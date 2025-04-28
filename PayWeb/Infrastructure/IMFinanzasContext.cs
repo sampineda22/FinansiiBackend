@@ -1,5 +1,7 @@
 ﻿using CRM.Infrastructure.Maps;
 using CRM.Infrastructure.Maps.Accounting;
+using CRM.Infrastructure.Maps.Accounting.BankStatement;
+using CRM.Infrastructure.Maps.Accounting.BankStatements;
 using CRM.Infrastructure.Maps.Accounting.CD;
 using CRM.Infrastructure.Maps.Admin;
 using CRM.Infrastructure.Maps.General;
@@ -32,7 +34,7 @@ namespace CRM.Infrastructure
             modelBuilder.ApplyConfiguration(new CertificateDepositMap());
             modelBuilder.ApplyConfiguration(new WeeklyRecordMap());
             modelBuilder.ApplyConfiguration(new BankStatementDetailsMap());
-            modelBuilder.ApplyConfiguration(new TransactionCodeMap());
+            modelBuilder.ApplyConfiguration(new ExceptionCodeMap());
         }
     }
 }

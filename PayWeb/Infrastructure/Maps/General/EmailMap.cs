@@ -11,9 +11,8 @@ namespace CRM.Infrastructure.Maps.General
             builder.ToTable("Emails", "Finansii");
             builder.HasKey(e => e.Id);
             builder.Property(e => e.CompanyCode).IsRequired().HasMaxLength(6);
-            builder.Property(e => e.EmailAddress).IsRequired().HasMaxLength(100);
             builder.Property(e => e.PersonalCode).HasMaxLength(20);
-            builder.Property(e => e.Code).IsRequired().HasMaxLength(6);
+            builder.Property(e => e.ProjectCode).IsRequired().HasMaxLength(10);
             builder.Property(e => e.Status).IsRequired();
         }
     }
