@@ -162,11 +162,14 @@ namespace CRM.Features.Accounting.CD
                     return EntityResponse.CreateError($"{response.Mensaje}");
                 }
 
-                if (certificates.Exists(x => x.CompanyCode == newCertificateDeposit.CompanyCode && x.isEnabled == true && x.Bank == newCertificateDeposit.Bank 
+                if(newCertificateDeposit.RenovationCertificate == null)
+                {
+                    if (certificates.Exists(x => x.CompanyCode == newCertificateDeposit.CompanyCode && x.isEnabled == true && x.Bank == newCertificateDeposit.Bank
                                           && x.Currency == newCertificateDeposit.Currency && x.CDNumber.Replace(" ", "") == newCertificateDeposit.CDNumber.Replace(" ", "")
                                           && x.Id != newCertificateDeposit.Id))
-                {
-                    return EntityResponse.CreateError($"Ya existe un certificado para ese banco con el mismo número de CD");
+                    {
+                        return EntityResponse.CreateError($"Ya existe un certificado para ese banco con el mismo número de CD");
+                    }
                 }
 
                 if (newCertificateDeposit.RenovationCertificate != null && newCertificateDeposit.Id == 0)

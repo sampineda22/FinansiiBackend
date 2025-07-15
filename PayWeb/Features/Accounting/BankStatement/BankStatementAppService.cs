@@ -588,7 +588,7 @@ namespace CRM.Features.Accounting.BankStatement
                                 description = description.Replace("  ", " ");
                                 description = description.Replace("          ", " ");
 
-                                string newDescription = description.Replace(currentTransaction.TrasactionCode, "");
+                                string newDescription = String.IsNullOrEmpty(currentTransaction.TrasactionCode) ? description : description.Replace(currentTransaction.TrasactionCode, "");
                                 currentTransaction.Description = string.IsNullOrEmpty(newDescription) ? currentTransaction.TrasactionCode : newDescription;
 
                                 /*if (bankConfiguration.Bank == Bank.BANPAIS) //usar cuando Banpais haya hecho la modificación
@@ -665,7 +665,10 @@ namespace CRM.Features.Accounting.BankStatement
                     }
                 }
 
-                code = codes.Find(x => x.Description == line.Replace(" ", "").ToUpper()).Code;
+                TransactionCode transactionItem = new();
+                transactionItem = codes.Find(x => x.Description == line.Replace(" ", "").ToUpper());
+
+                code = transactionItem == null ? "" : transactionItem.Code;
             }
             catch(Exception ex){
                 Console.WriteLine($"Error reading file: {ex.Message}");
