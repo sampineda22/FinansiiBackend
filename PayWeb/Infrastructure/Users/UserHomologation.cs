@@ -1,4 +1,6 @@
-﻿namespace CRM.Infrastructure.Users
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace CRM.Infrastructure.Users
 {
     public class UserHomologation
     {

@@ -82,11 +82,16 @@ namespace CRM.Features.Credits.ReceiptBreakdownReport
                         new SqlParameter("@DataAreaId", companyCode),
                         new SqlParameter("@DataAreaOfAgent", salesAgent.AgentCompanyCode),
                     };
-                    List<WorkPaper> workPaperDetails = _unitOfWork.Repository<WorkPaper>().GetSP<WorkPaper>("[Finansii].[WorkpaperReport]", parameters, 250).ToList();
+                    List<WorkPaper> workPaperDetails = _unitOfWork.Repository<WorkPaper>().GetSP<WorkPaper>("[Finansii].[WorkpaperReport]", parameters, commandTimeout: 500).ToList();
 
-                     if(workPaperDetails.Count > 0)
+
+                    if (workPaperDetails.Count > 0)
                     {
-                        response = GetReportsFolderPath(companyCode, startDate, serverPath, "Cédulas de Asesores de Venta", salesAgent.Name, week, weekNumber).Result;
+                        response = GetReportsFolderPath(companyCode
+                                                       /*Commented on 2026-ene.-06 by spineda - Begin*/
+                                                       , endDate
+                                                       /*Commented on 2025-ene.-06 by spineda - End*/
+                                                       , serverPath, "Cédulas de Asesores de Venta", salesAgent.Name, week, weekNumber).Result;
 
                         if (response is EntityResponse<string> genericResponse2)
                         {

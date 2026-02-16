@@ -162,21 +162,25 @@ namespace CRM.Features.Accounting.CD
                     return EntityResponse.CreateError($"{response.Mensaje}");
                 }
 
-                if (certificates.Exists(x => x.CompanyCode == newCertificateDeposit.CompanyCode && x.isEnabled == true && x.Bank == newCertificateDeposit.Bank 
-                                          && x.Currency == newCertificateDeposit.Currency && x.CDNumber.Replace(" ", "") == newCertificateDeposit.CDNumber.Replace(" ", "")
-                                          && x.Id != newCertificateDeposit.Id))
-                {
-                    return EntityResponse.CreateError($"Ya existe un certificado para ese banco con el mismo número de CD");
-                }
-
+                /*Commented on 2025-dic.-12 by spineda - Begin*/
                 if (newCertificateDeposit.RenovationCertificate != null && newCertificateDeposit.Id == 0)
                 {
-                    CertificateDeposit certificate = certificates.Where(x => x.Bank == newCertificateDeposit.Bank && x.CDNumber == newCertificateDeposit.RenovationCertificate).FirstOrDefault();
+                    CertificateDeposit certificate = certificates.Where(x => x.Bank == newCertificateDeposit.Bank && x.CDNumber == newCertificateDeposit.RenovationCertificate && x.isEnabled == true).FirstOrDefault();
                     certificate.isEnabled = false;
 
                     _unitOfWork.Repository<CertificateDeposit>().Update(certificate);
                     await _unitOfWork.SaveChangesAsync();
                 }
+
+                if (certificates.Exists(x => x.CompanyCode == newCertificateDeposit.CompanyCode && x.isEnabled == true && x.Bank == newCertificateDeposit.Bank 
+                                          && x.Currency == newCertificateDeposit.Currency                                          
+                                          && x.CDNumber.Replace(" ", "") == newCertificateDeposit.CDNumber.Replace(" ", "")
+                                          && x.isEnabled == true
+                                          && x.Id != newCertificateDeposit.Id))
+                {
+                    return EntityResponse.CreateError($"Ya existe un certificado para ese banco con el mismo número de CD");
+                }
+                /*Commented on 2025-dic.-12 by spineda - Begin*/                
 
                 if(newCertificateDeposit.Id != 0)
                 {

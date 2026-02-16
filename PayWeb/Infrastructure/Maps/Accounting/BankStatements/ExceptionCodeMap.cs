@@ -13,6 +13,7 @@ namespace CRM.Infrastructure.Maps.Accounting.BankStatement
             builder.Property(e => e.Code).HasMaxLength(25).IsRequired();
             builder.Property(e => e.AccountId).HasMaxLength(20).IsRequired();
             builder.Property(e => e.CompanyCode).HasMaxLength(8).IsRequired();
+            builder.Property(e => e.TransactionType).HasColumnType("int").IsRequired();
         }
     }
 }
