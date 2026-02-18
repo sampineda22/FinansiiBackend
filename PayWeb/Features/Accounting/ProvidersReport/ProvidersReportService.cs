@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using OfficeOpenXml.Table;
@@ -71,7 +72,15 @@ namespace CRM.Features.Accounting.ProvidersReport
                                 var cell = (string)worksheet.Cells[row, 4].Value;
                                 var currency = (string)worksheet.Cells[row, 5].Value;
 
-                                if(currency == null || currency == "")
+                                /*Commented on 2026-feb.-18 by spineda - Begin*/
+                                if (String.IsNullOrEmpty(cell) || cell.Replace(" ", "") == "/")
+                                {
+                                    row++;
+                                    continue;
+                                }
+                                /*Commented on 2026-feb.-18 by spineda - End*/
+
+                                if (currency == null || currency == "")
                                 {
                                     //var valor = (string)worksheet.Cells[row, 5].Value;
                                     var valor = (string)worksheet.Cells[row, 6].Value;
