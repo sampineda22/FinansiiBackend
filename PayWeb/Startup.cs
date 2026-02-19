@@ -1,5 +1,3 @@
-using System;
-using System.Text;
 using CRM.Features.Accounting.BankConfiguration;
 using CRM.Features.Accounting.BankStatement;
 using CRM.Features.Accounting.BankStatementDetails;
@@ -24,6 +22,8 @@ using Microsoft.OpenApi.Models;
 using PayWeb.Features.Security;
 using PayWeb.Features.Users;
 using PayWeb.Infrastructure.Core;
+using System;
+using System.Text;
 
 namespace PayWeb
 {

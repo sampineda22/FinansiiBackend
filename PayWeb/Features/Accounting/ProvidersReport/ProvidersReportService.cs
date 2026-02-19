@@ -1,4 +1,4 @@
-﻿using Aspose.Cells;
+﻿using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
@@ -53,7 +53,7 @@ namespace CRM.Features.Accounting.ProvidersReport
                                 return EntityResponse.CreateError(ex.Message);
                             }
 
-                            if (cellvalue == "Total pendiente en divisa de contabilidad" || cellvalue == "Total")
+                            if (cellvalue == "Total pendiente en divisa de contabilidad")
                             {
                                 list.Add(tmp);
                                 tmp = new ProviderReportDto();
@@ -67,14 +67,23 @@ namespace CRM.Features.Accounting.ProvidersReport
                             {
                                 dueDate = true;
                             }
-                            else if (dueDate)
+                            else if (dueDate /*&& cellvalue != "Total pendiente en divisa de transacción"*/)
                             {
                                 var cell = (string)worksheet.Cells[row, 4].Value;
-                                //var currency = (string)worksheet.Cells[row, 5].Value;
+                                var currency = (string)worksheet.Cells[row, 5].Value;
 
-                                /*if(currency == null || currency == "")
-                                {*/
-                                    var valor = (string)worksheet.Cells[row, 5/*6*/].Value;
+                                /*Commented on 2026-feb.-18 by spineda - Begin*/
+                                if (String.IsNullOrEmpty(cell) || cell.Replace(" ", "") == "/")
+                                {
+                                    row++;
+                                    continue;
+                                }
+                                /*Commented on 2026-feb.-18 by spineda - End*/
+
+                                if (currency == null || currency == "")
+                                {
+                                    //var valor = (string)worksheet.Cells[row, 5].Value;
+                                    var valor = (string)worksheet.Cells[row, 6].Value;
                                     valor = valor.Replace(".", "");
                                     valor = valor.Replace(",", ".");
 
@@ -86,39 +95,17 @@ namespace CRM.Features.Accounting.ProvidersReport
                                     {
                                         tmp.RealBalance += Convert.ToDecimal(valor);
                                     }
-                                //}
+                                }
                             }
-                            else if (cellvalue.StartsWith("PRV-"))
+                            else if (/*cellvalue != null &&*/ cellvalue.StartsWith("PRV-"))
                             {
                                 tmp.Provider = cellvalue;
                                 tmp.Name = (string)worksheet.Cells[row, 4].Value;
                                 tmp.Group = (string)worksheet.Cells[row, 5].Value;
-                                DateTime date = new();
 
                                 row += 2;
-
-                                var cellValue = worksheet.Cells[row, 6].Value;                                
-
-                                if(cellValue is string)
-                                {
-                                    string dateValue = (string)worksheet.Cells[row, 6].Value;
-
-                                    if (String.IsNullOrEmpty(dateValue))
-                                    {
-                                        row += 1;
-                                        cellValue = worksheet.Cells[row, 5].Value;
-
-                                        if (cellValue is double serialDate)
-                                        {
-                                            DateTime baseDate = new DateTime(1900, 1, 1);
-                                            date = baseDate.AddDays(serialDate - 2);
-                                        }
-                                        row -= 1;
-                                    }
-
-                                    date = date.Year == 1 ? DateTime.ParseExact(dateValue.Replace("Saldo a partir de ", ""), "M/d/yyyy", CultureInfo.InvariantCulture) : date;
-                                }
-                                
+                                string dateValue = (string)worksheet.Cells[row, 6].Value;
+                                DateTime date = DateTime.ParseExact(dateValue.Replace("Saldo a partir de ", ""), "M/d/yyyy", CultureInfo.InvariantCulture);
                                 tmp.Date = date;
 
                                 tmp.RealBalance = 0;

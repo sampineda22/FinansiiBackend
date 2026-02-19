@@ -9,9 +9,10 @@ namespace CRM.Infrastructure.Enum
     {
         public enum TransactionType 
         {
-            Debit,
-            Credit
+            Credit,
+            Debit
         }
 
     }
 }
+  

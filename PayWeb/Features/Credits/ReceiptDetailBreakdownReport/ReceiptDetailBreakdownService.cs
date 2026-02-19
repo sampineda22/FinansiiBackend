@@ -1,5 +1,4 @@
-﻿using CRM.Features.Accounting.BankStatementDetails;
-using CRM.Features.Credits.ReceiptBreakdownReport;
+﻿using CRM.Features.Credits.ReceiptBreakdownReport;
 using CRM.Infrastructure.Core;
 using PayWeb.Common;
 using PayWeb.Infrastructure.Core;
@@ -7,18 +6,12 @@ using System.Threading.Tasks;
 using System;
 using OfficeOpenXml;
 using OfficeOpenXml.Table;
-using CRM.Models.PayWeb;
 using System.Linq;
-using CRM.Models.Payroll;
 using System.Collections.Generic;
 using System.IO;
-using CRM.Features.Credits.WorkpaperReport;
 using Microsoft.Data.SqlClient;
 using CRM.Models.General;
 using CRM.Features.Credits.ReceiptDetailBreakdownReport;
-using System.Drawing;
-using CRM.GeneralDTOs;
-using Microsoft.AspNetCore.Http;
 
 namespace CRM.Features.Credits.ReceiptBreakdown
 {
@@ -95,7 +88,11 @@ namespace CRM.Features.Credits.ReceiptBreakdown
 
                     if(receiptDetailBreakdown.Count > 0)
                     {
-                        response = _workpaperReportService.GetReportsFolderPath(companyCode, startDate, serverPath, "Cédulas de Asesores de Venta", agent.Name, week, weekNumber).Result;
+                        response = _workpaperReportService.GetReportsFolderPath(companyCode
+                                                                                /*Commented on 2026-ene.-06 by spineda - Begin*/
+                                                                                , endDate
+                                                                                /*Commented on 2025-ene.-06 by spineda - End*/
+                                                                                , serverPath, "Cédulas de Asesores de Venta", agent.Name, week, weekNumber).Result;
                         if (response is EntityResponse<string> genericResponse2)
                         {
                             folderPath = genericResponse2.Data;
