@@ -1,10 +1,10 @@
 ﻿using CRM.Features.Accounting.BankStatement;
 using CRM.Features.Accounting.BankStatementServiceAX;
+using CRM.Features.Admin.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PayWeb.Common;
-using PayWeb.Features.Users;
 using System;
 using System.Linq;
 using System.Threading.Tasks;

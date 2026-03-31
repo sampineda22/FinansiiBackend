@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CRM.Features.Admin.Users;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using PayWeb.Features.Users;
 using System;
 using System.Collections.Generic;
 using System.Linq;

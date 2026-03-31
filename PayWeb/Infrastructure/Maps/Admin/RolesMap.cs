@@ -9,14 +9,15 @@ namespace CRM.Infrastructure.Maps.Admin
         public void Configure(EntityTypeBuilder<Role> builder)
         {
             builder.ToTable("Roles", "Finansii");
-            builder.HasKey(e => new { e.RoleId, e.CompanyCode });
+            builder.HasKey(e => new { e.RoleId });
             builder.Property(e => e.RoleId).IsRequired().HasColumnType("int").UseIdentityColumn();
-            builder.Property(e => e.CompanyCode).IsRequired().HasColumnType("varchar").HasMaxLength(4);
-            builder.Property(e => e.Description).IsRequired().HasColumnType("varchar").HasMaxLength(60);
+            builder.Property(e => e.RoleCode).IsRequired().HasColumnType("varchar").HasMaxLength(60);
+            builder.Property(e => e.RoleName).IsRequired().HasColumnType("varchar").HasMaxLength(60);
+            builder.Property(e => e.Description).IsRequired().HasColumnType("varchar").HasMaxLength(100);
             builder.Property(e => e.CreationDate).IsRequired().HasColumnType("datetime");
             builder.Property(e => e.CreationUser).IsRequired().HasColumnType("varchar").HasMaxLength(20);
-            builder.Property(e => e.UpdateDate).HasColumnType("datetime");
-            builder.Property(e => e.UpdateUser).HasColumnType("varchar").HasMaxLength(20);
+            builder.Property(e => e.ModifiedDate).HasColumnType("datetime");
+            builder.Property(e => e.ModifiedUser).HasColumnType("varchar").HasMaxLength(20);
         }
     }
 }

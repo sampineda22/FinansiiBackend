@@ -5,11 +5,14 @@ using CRM.Features.Accounting.BankStatementServiceAX;
 using CRM.Features.Accounting.CD;
 using CRM.Features.Accounting.HostToHostBanPais;
 using CRM.Features.Accounting.ProvidersReport;
-using CRM.Features.Admin.Roles;
+using CRM.Features.Admin.Screen;
+using CRM.Features.Admin.Users;
 using CRM.Features.Credits.ReceiptBreakdown;
 using CRM.Features.Credits.ReceiptBreakdownReport;
-using CRM.Infrastructure;
+using CRM.Features.Gira.ExpensesSettings;
+using CRM.Infrastructure.Context;
 using CRM.Infrastructure.Core;
+using CRM.Infrastructure.Endpoint;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -20,7 +23,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PayWeb.Features.Security;
-using PayWeb.Features.Users;
 using PayWeb.Infrastructure.Core;
 using System;
 using System.Text;
@@ -123,6 +125,9 @@ namespace PayWeb
             services.AddDbContext<PayrollContext>(o =>
                 o.UseSqlServer(Configuration.GetConnectionString("Payroll")));
 
+            services.AddDbContext<GiraContext>(o =>
+                o.UseSqlServer(Configuration.GetConnectionString("Gira")));
+
             services.AddScoped<IUnitOfWorkPayWeb, UnitOfWorkPayWeb>(s => {
                 DbContext db = s.GetService<PayWebContext>();
                 return new UnitOfWorkPayWeb(db);
@@ -138,11 +143,16 @@ namespace PayWeb
                 return new UnitOfWorkPayroll(db);
             });
 
+            services.AddScoped<IUnitOfWorkGira, UnitOfWorkGira>(s => {
+                DbContext db = s.GetService<GiraContext>();
+                return new UnitOfWorkGira(db);
+            });
+
             services.Configure<AXConnectionSettings>(Configuration.GetSection("AXConnection"));
             services.AddScoped<AXEndpoint>();
 
             services.AddScoped<UserAppService>();
-            services.AddScoped<RolesService>();
+            //services.AddScoped<RolesService>();
             services.AddScoped<BankStatementAppService>();
             services.AddScoped<BankStatementDetailsAppService>();
             services.AddScoped<BankConfigurationAppService>();
@@ -152,6 +162,8 @@ namespace PayWeb
             services.AddScoped<ReceiptDetailBreakdownService>();
             services.AddScoped<ProvidersReportService>();
             services.AddScoped<CertificateDepositService>();
+            services.AddScoped<ScreenService>();
+            services.AddScoped<ExpensesSettingsService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

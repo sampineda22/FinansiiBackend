@@ -1,8 +1,8 @@
 ﻿using CRM.Common;
 using CRM.Features.Credits.ReceiptBreakdown;
 using CRM.Features.Credits.ReceiptDetailBreakdownReport;
-using CRM.Infrastructure;
 using CRM.Infrastructure.Core;
+using CRM.Infrastructure.Endpoint;
 using IM_CDJournalSG;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;

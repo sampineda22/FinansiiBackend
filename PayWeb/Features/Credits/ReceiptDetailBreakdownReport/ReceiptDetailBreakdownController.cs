@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using PayWeb.Features.Users;
 using System.Linq;
 using System;
 using PayWeb.Common;
 using System.Threading.Tasks;
+using CRM.Features.Admin.Users;
 
 namespace CRM.Features.Credits.ReceiptBreakdown
 {

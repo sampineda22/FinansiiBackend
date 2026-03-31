@@ -9,7 +9,7 @@ using CRM.Common;
 using ServiceReference1;
 using System;
 using CRM.Features.Accounting.BankStatement;
-using CRM.Infrastructure;
+using CRM.Infrastructure.Endpoint;
 
 namespace CRM.Features.Accounting.BankStatementServiceAX
 {

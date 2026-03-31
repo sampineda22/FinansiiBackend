@@ -1,0 +1,43 @@
+﻿using CRM.Infrastructure.Maps;
+using CRM.Infrastructure.Maps.Accounting;
+using CRM.Infrastructure.Maps.Accounting.BankStatement;
+using CRM.Infrastructure.Maps.Accounting.BankStatements;
+using CRM.Infrastructure.Maps.Accounting.CD;
+using CRM.Infrastructure.Maps.Admin;
+using CRM.Infrastructure.Maps.Credits;
+using CRM.Infrastructure.Maps.General;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CRM.Infrastructure.Context
+{
+    public class IMFinanzasContext : DbContext
+    {
+        public IMFinanzasContext(DbContextOptions<IMFinanzasContext> optionsBuilder) : base(optionsBuilder)
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.ApplyConfiguration(new UserMap());
+            modelBuilder.ApplyConfiguration(new BankStatementMap());
+            modelBuilder.ApplyConfiguration(new CertificateDepositMap());
+            modelBuilder.ApplyConfiguration(new RolesMap());
+            modelBuilder.ApplyConfiguration(new BankConfigurationMap());
+            modelBuilder.ApplyConfiguration(new UserHomologationMap());
+            modelBuilder.ApplyConfiguration(new RoutePathMap());
+            modelBuilder.ApplyConfiguration(new EmailMap());
+            modelBuilder.ApplyConfiguration(new CertificateDepositMap());
+            modelBuilder.ApplyConfiguration(new WeeklyRecordMap());
+            modelBuilder.ApplyConfiguration(new BankStatementDetailsMap());
+            modelBuilder.ApplyConfiguration(new ExceptionCodeMap());
+            modelBuilder.ApplyConfiguration(new ScreenMap());
+            modelBuilder.ApplyConfiguration(new UserRolesMap());
+            modelBuilder.ApplyConfiguration(new RoleScreensMap());
+        }
+    }
+}

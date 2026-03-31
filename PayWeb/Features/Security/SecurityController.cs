@@ -1,13 +1,13 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using CRM.Features.Admin.Users;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using PayWeb.Features.Users;
+using PayWeb.Common;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
@@ -72,7 +72,7 @@ namespace PayWeb.Features.Security
                 CompanyCode = request.CompanyCode
             });
         }
-        
+
         [AllowAnonymous]
         [HttpPost("checkcredentials")]
         public static int CheckCredentials([FromBody] string userId, string password)
@@ -138,23 +138,6 @@ namespace PayWeb.Features.Security
                 return Unauthorized(e.Message); // return 401 so that the client side can redirect the user to login page
             }
         }
-
-        [Authorize]
-        [HttpGet("GetAllUsers")]
-        public async Task<ActionResult> GetAllUsers()
-        {
-            var users = new List<UserDto>();
-            try
-            {
-                users = await _userService.GetAll();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
-            return Ok(users);
-        }
-
     }
   
 

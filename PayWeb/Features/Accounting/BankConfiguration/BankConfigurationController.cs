@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using CRM.Features.Admin.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PayWeb.Common;
-using PayWeb.Features.Users;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
