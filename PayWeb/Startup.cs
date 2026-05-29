@@ -1,3 +1,4 @@
+using CRM.Features.Accounting.AccountingConfiguration;
 using CRM.Features.Accounting.BankConfiguration;
 using CRM.Features.Accounting.BankStatement;
 using CRM.Features.Accounting.BankStatementDetails;
@@ -7,6 +8,8 @@ using CRM.Features.Accounting.HostToHostBanPais;
 using CRM.Features.Accounting.ProvidersReport;
 using CRM.Features.Admin.Screen;
 using CRM.Features.Admin.Users;
+using CRM.Features.Accounting.VendPaymentReport;
+using CRM.Features.Admin.Roles;
 using CRM.Features.Credits.ReceiptBreakdown;
 using CRM.Features.Credits.ReceiptBreakdownReport;
 using CRM.Features.Gira.Approve;
@@ -57,7 +60,7 @@ namespace PayWeb
                 options.AddPolicy(name: CorsOrigins,
                                   builder =>
                                   {
-                                      builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod().WithExposedHeaders("Content-Disposition");
+                                      builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod().WithExposedHeaders("Content-Disposition", "X-Report-Warnings");
                                   });
                
             });
@@ -171,6 +174,8 @@ namespace PayWeb
             services.AddScoped<HistoricalService>();
             services.AddScoped<ApproveService>();
             services.AddScoped<AXExpensesService>();
+            services.AddScoped<VendPaymentReportService>();
+            services.AddScoped<AccountingConfigurationService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

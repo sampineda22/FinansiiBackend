@@ -12,6 +12,11 @@ namespace CRM.Features.Admin.Users
         public string Password { get; set; }
         public bool State { get; set; }
         public string CompanyCode { get; set; }
+        public string PersonalCode { get; set; }
+        public string FirstName { get; set; }
+        public string SecondName { get; set; }
+        public string FirstLastName { get; set; }
+		public string SecondLastName { get; set; }
         public DateTime CreateDateTime { get; set; }
     }
 }
