@@ -4,14 +4,16 @@ using CRM.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CRM.Migrations
 {
     [DbContext(typeof(IMFinanzasContext))]
-    partial class IMFinanzasContextModelSnapshot : ModelSnapshot
+    [Migration("20260526210024_addYearPaymentDates")]
+    partial class addYearPaymentDates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,6 +30,7 @@ namespace CRM.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("CompanyCode")
+                        .IsRequired()
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
 
@@ -37,7 +40,7 @@ namespace CRM.Migrations
                     b.Property<int>("StartDate")
                         .HasColumnType("int");
 
-                    b.HasKey("Month", "Year", "CompanyCode");
+                    b.HasKey("Month", "Year");
 
                     b.ToTable("PaymentDates", "Finansii");
                 });

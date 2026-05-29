@@ -4,14 +4,16 @@ using CRM.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CRM.Migrations
 {
     [DbContext(typeof(IMFinanzasContext))]
-    partial class IMFinanzasContextModelSnapshot : ModelSnapshot
+    [Migration("20260526195713_UpdatePaymentDates")]
+    partial class UpdatePaymentDates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -19,15 +21,13 @@ namespace CRM.Migrations
                 .HasAnnotation("ProductVersion", "5.0.5")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("CRM.Features.Accounting.AccountingConfiguration.PaymentDate", b =>
+            modelBuilder.Entity("CRM.Features.Accounting.AccountingConfiguration.PaymentDates", b =>
                 {
                     b.Property<int>("Month")
                         .HasColumnType("int");
 
-                    b.Property<int>("Year")
-                        .HasColumnType("int");
-
                     b.Property<string>("CompanyCode")
+                        .IsRequired()
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
 
@@ -37,7 +37,7 @@ namespace CRM.Migrations
                     b.Property<int>("StartDate")
                         .HasColumnType("int");
 
-                    b.HasKey("Month", "Year", "CompanyCode");
+                    b.HasKey("Month");
 
                     b.ToTable("PaymentDates", "Finansii");
                 });

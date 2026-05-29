@@ -4,43 +4,22 @@ using CRM.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CRM.Migrations
 {
     [DbContext(typeof(IMFinanzasContext))]
-    partial class IMFinanzasContextModelSnapshot : ModelSnapshot
+    [Migration("20260526150809_PaymentDates")]
+    partial class PaymentDates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("ProductVersion", "5.0.5")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-            modelBuilder.Entity("CRM.Features.Accounting.AccountingConfiguration.PaymentDate", b =>
-                {
-                    b.Property<int>("Month")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CompanyCode")
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
-                    b.Property<int>("EndDate")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StartDate")
-                        .HasColumnType("int");
-
-                    b.HasKey("Month", "Year", "CompanyCode");
-
-                    b.ToTable("PaymentDates", "Finansii");
-                });
 
             modelBuilder.Entity("CRM.Features.Accounting.BankConfiguration.BankConfiguration", b =>
                 {
@@ -318,6 +297,31 @@ namespace CRM.Migrations
                     b.HasIndex("CertificateId");
 
                     b.ToTable("WeeklyRecords", "Finansii");
+                });
+
+            modelBuilder.Entity("CRM.Features.Accounting.VendPaymentReport.PaymentDates", b =>
+                {
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CompanyCode")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<string>("EndDate")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.Property<string>("StartDate")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.HasKey("Month");
+
+                    b.ToTable("PaymentDates", "Finansii");
                 });
 
             modelBuilder.Entity("CRM.Features.Admin.Roles.Role", b =>

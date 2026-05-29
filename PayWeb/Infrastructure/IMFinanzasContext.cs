@@ -1,16 +1,13 @@
-﻿using CRM.Infrastructure.Maps;
+﻿using CRM.Features.Accounting.VendPaymentReport;
+using CRM.Infrastructure.Maps;
 using CRM.Infrastructure.Maps.Accounting;
 using CRM.Infrastructure.Maps.Accounting.BankStatement;
 using CRM.Infrastructure.Maps.Accounting.BankStatements;
 using CRM.Infrastructure.Maps.Accounting.CD;
+using CRM.Infrastructure.Maps.Accounting.VendPaymentReport;
 using CRM.Infrastructure.Maps.Admin;
 using CRM.Infrastructure.Maps.General;
-using CRM.Infrastructure.Users;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CRM.Infrastructure
 {
@@ -35,6 +32,7 @@ namespace CRM.Infrastructure
             modelBuilder.ApplyConfiguration(new WeeklyRecordMap());
             modelBuilder.ApplyConfiguration(new BankStatementDetailsMap());
             modelBuilder.ApplyConfiguration(new ExceptionCodeMap());
+            modelBuilder.ApplyConfiguration(new PaymentDateMap());
         }
     }
 }
