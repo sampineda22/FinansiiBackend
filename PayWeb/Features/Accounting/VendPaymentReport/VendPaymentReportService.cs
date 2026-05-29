@@ -1,6 +1,8 @@
 ﻿using Aspose.Cells;
 using ClosedXML.Excel;
 using CRM.Features.Accounting.AccountingConfiguration;
+using DocumentFormat.OpenXml.Drawing;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
 using Microsoft.Data.SqlClient;
 using PayWeb.Common;
 using PayWeb.Features.Users;
@@ -168,13 +170,15 @@ namespace CRM.Features.Accounting.VendPaymentReport
                     paymentDates = genericResponse3.Data;
                     paymentDates = paymentDates.Where(x => x.Year == DateTime.Now.Year && x.Month == (DateTime.Now.Month -1)).ToList();
 
-                    if(paymentDates.Count <= 0)
+                    if (paymentDates.Count <= 0)
                     {
                         warnings.Add("No se encontro una fecha de pago configurada para el presente mes.");
                     }
-
-                    startDate = paymentDates.Select(x => x.StartDate).First();
-                    endDate = paymentDates.Select(x => x.EndDate).First();
+                    else
+                    {
+                        startDate = paymentDates.Select(x => x.StartDate).First();
+                        endDate = paymentDates.Select(x => x.EndDate).First();
+                    }
                 }
                 else if (!response.Ok)
                 {
@@ -428,14 +432,14 @@ namespace CRM.Features.Accounting.VendPaymentReport
 
         public EntityResponse SaveExcelAsPDF(XLWorkbook workbook, string fileName)
         {
-            string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            string tempFolder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString());
 
             try
             {
                 Directory.CreateDirectory(tempFolder);
 
-                string excelPath = Path.Combine(tempFolder, $"{fileName}.xlsx");
-                string pdfPath = Path.Combine(tempFolder, $"{fileName}.pdf");
+                string excelPath = System.IO.Path.Combine(tempFolder, $"{fileName}.xlsx");
+                string pdfPath = System.IO.Path.Combine(tempFolder, $"{fileName}.pdf");
 
                 workbook.SaveAs(excelPath);
 
@@ -471,7 +475,7 @@ namespace CRM.Features.Accounting.VendPaymentReport
                 string[] extensions = { ".png", ".jpg", ".jpeg" };
 
                 string imagePath = extensions
-                .Select(ext => Path.Combine(path, imageName + ext))
+                .Select(ext => System.IO.Path.Combine(path, imageName + ext))
                 .FirstOrDefault(File.Exists);
 
                 if (imagePath != null)
