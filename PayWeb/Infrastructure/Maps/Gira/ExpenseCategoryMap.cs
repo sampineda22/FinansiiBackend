@@ -18,7 +18,6 @@ namespace CRM.Infrastructure.Maps.Gira
             builder.Property(e => e.IsImageRequired).HasColumnType("bit");
             builder.Property(e => e.Status).HasColumnType("bit");
             builder.Property(e => e.VendAccount).HasMaxLength(50);
-            builder.Property(e => e.TaxGroup).HasMaxLength(50);
             builder.Property(e => e.CompanyCode).HasMaxLength(4).IsRequired();
 
             builder.HasOne(e => e.ExpenseType)

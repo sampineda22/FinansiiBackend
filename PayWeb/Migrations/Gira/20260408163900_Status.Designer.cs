@@ -4,14 +4,16 @@ using CRM.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CRM.Migrations.Gira
 {
     [DbContext(typeof(GiraContext))]
-    partial class GiraContextModelSnapshot : ModelSnapshot
+    [Migration("20260408163900_Status")]
+    partial class Status
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -87,6 +89,10 @@ namespace CRM.Migrations.Gira
                     b.Property<bool>("Status")
                         .HasColumnType("bit");
 
+                    b.Property<string>("TaxGroup")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("VendAccount")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -111,10 +117,6 @@ namespace CRM.Migrations.Gira
                         .IsRequired()
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
-
-                    b.Property<string>("Icon")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Journal")
                         .IsRequired()
@@ -223,6 +225,10 @@ namespace CRM.Migrations.Gira
                         .HasAnnotation("SqlServer:IdentitySeed", 1)
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<string>("Admin")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("CompanyCode")
                         .IsRequired()
                         .HasMaxLength(4)
@@ -243,18 +249,20 @@ namespace CRM.Migrations.Gira
                     b.Property<int>("ExpenseCategoryId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ExpenseNote")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
                     b.Property<int?>("FuelTypeId")
                         .HasColumnType("int");
 
-                    b.Property<double?>("GravadoAmount")
+                    b.Property<double>("GravadoAmount")
                         .HasColumnType("float");
 
                     b.Property<string>("ImagePath")
+                        .IsRequired()
                         .HasMaxLength(80)
                         .HasColumnType("nvarchar(80)");
-
-                    b.Property<bool>("InUse")
-                        .HasColumnType("bit");
 
                     b.Property<double>("InvoiceAmount")
                         .HasColumnType("float");
@@ -269,25 +277,14 @@ namespace CRM.Migrations.Gira
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("JournalNum")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int>("MealId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PersonalCode")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("PersonalCodeAdmin")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<string>("RejectionMotive")
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("SalesAgentUser")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("SeriesNum")
                         .HasMaxLength(20)
@@ -297,6 +294,7 @@ namespace CRM.Migrations.Gira
                         .HasColumnType("int");
 
                     b.Property<string>("VendAccount")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -348,11 +346,6 @@ namespace CRM.Migrations.Gira
                         .HasAnnotation("SqlServer:IdentityIncrement", 1)
                         .HasAnnotation("SqlServer:IdentitySeed", 1)
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
 
                     b.Property<string>("Name")
                         .IsRequired()

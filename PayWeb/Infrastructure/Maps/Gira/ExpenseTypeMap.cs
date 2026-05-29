@@ -15,6 +15,7 @@ namespace CRM.Infrastructure.Maps.Gira
             builder.Property(e => e.Journal).HasMaxLength(50).IsRequired();
             builder.Property(e => e.CompanyCode).HasMaxLength(4).IsRequired();
             builder.Property(e => e.State).HasColumnType("bit");
+            builder.Property(e => e.Icon).HasMaxLength(50);
         }
     }
 }

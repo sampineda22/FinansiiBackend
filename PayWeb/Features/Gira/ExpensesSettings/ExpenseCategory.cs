@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using CRM.Features.Gira.Historical;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace CRM.Features.Gira.ExpensesSettings
@@ -13,12 +14,14 @@ namespace CRM.Features.Gira.ExpensesSettings
         public bool IsImageRequired { get; set; }
         public bool Status { get; set; }
         public string? VendAccount { get; set; }
-        public string? TaxGroup { get; set; }
         public string CompanyCode { get; set; }
 
         public virtual ExpenseType ExpenseType { get; set; }
 
         [JsonIgnore]
         public virtual ICollection<ExpenseAccount> ExpensesAccounts { get; set; }
+
+        [JsonIgnore]
+        public virtual ICollection<ExpenseDetail> ExpenseDetails { get; set; }
     }
 }

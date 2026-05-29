@@ -9,7 +9,10 @@ using CRM.Features.Admin.Screen;
 using CRM.Features.Admin.Users;
 using CRM.Features.Credits.ReceiptBreakdown;
 using CRM.Features.Credits.ReceiptBreakdownReport;
+using CRM.Features.Gira.Approve;
+using CRM.Features.Gira.AXExpenses;
 using CRM.Features.Gira.ExpensesSettings;
+using CRM.Features.Gira.Historical;
 using CRM.Infrastructure.Context;
 using CRM.Infrastructure.Core;
 using CRM.Infrastructure.Endpoint;
@@ -54,7 +57,7 @@ namespace PayWeb
                 options.AddPolicy(name: CorsOrigins,
                                   builder =>
                                   {
-                                      builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+                                      builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod().WithExposedHeaders("Content-Disposition");
                                   });
                
             });
@@ -149,6 +152,7 @@ namespace PayWeb
             });
 
             services.Configure<AXConnectionSettings>(Configuration.GetSection("AXConnection"));
+            services.Configure<EVAConnectionSettings>(Configuration.GetSection("EVAConnection"));
             services.AddScoped<AXEndpoint>();
 
             services.AddScoped<UserAppService>();
@@ -164,6 +168,9 @@ namespace PayWeb
             services.AddScoped<CertificateDepositService>();
             services.AddScoped<ScreenService>();
             services.AddScoped<ExpensesSettingsService>();
+            services.AddScoped<HistoricalService>();
+            services.AddScoped<ApproveService>();
+            services.AddScoped<AXExpensesService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -10,6 +10,7 @@ namespace CRM.Features.Gira.ExpensesSettings
         public string Journal { get; set; }
         public string CompanyCode { get; set; }
         public bool State { get; set; }
+        public string? Icon { get; set; }
 
         [JsonIgnore]
         public virtual ICollection<ExpenseCategory> ExpensesCategories { get; set; }

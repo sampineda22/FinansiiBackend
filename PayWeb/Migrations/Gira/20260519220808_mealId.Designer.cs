@@ -4,14 +4,16 @@ using CRM.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CRM.Migrations.Gira
 {
     [DbContext(typeof(GiraContext))]
-    partial class GiraContextModelSnapshot : ModelSnapshot
+    [Migration("20260519220808_mealId")]
+    partial class mealId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -223,6 +225,10 @@ namespace CRM.Migrations.Gira
                         .HasAnnotation("SqlServer:IdentitySeed", 1)
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<string>("Admin")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("CompanyCode")
                         .IsRequired()
                         .HasMaxLength(4)
@@ -246,7 +252,7 @@ namespace CRM.Migrations.Gira
                     b.Property<int?>("FuelTypeId")
                         .HasColumnType("int");
 
-                    b.Property<double?>("GravadoAmount")
+                    b.Property<double>("GravadoAmount")
                         .HasColumnType("float");
 
                     b.Property<string>("ImagePath")
@@ -276,18 +282,14 @@ namespace CRM.Migrations.Gira
                     b.Property<int>("MealId")
                         .HasColumnType("int");
 
-                    b.Property<string>("PersonalCode")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("PersonalCodeAdmin")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<string>("RejectionMotive")
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("SalesAgentUser")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("SeriesNum")
                         .HasMaxLength(20)

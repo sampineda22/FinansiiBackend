@@ -1,6 +1,5 @@
 ﻿using CRM.GeneralDTOs;
 using CRM.Infrastructure.Core;
-using CRM.Migrations.Gira;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -194,6 +193,8 @@ namespace CRM.Features.Gira.ExpensesSettings
                     return EntityResponse.CreateError("Se encontró una configuración con las mismas caracteristicas. Validar que la información ingresada sea la correcta");
                 }
 
+                expenseType.Journal = expenseType.Journal.Replace(" ", "");
+
                 if (expenseType.Id == 0)
                 {
                     expenseType.State = true;
@@ -233,7 +234,7 @@ namespace CRM.Features.Gira.ExpensesSettings
             try
             {
                 ExpenseCategory category = _unitOfWorkGira.Repository<ExpenseCategory>().Query().Where(x => x.CompanyCode == expenseCategory.CompanyCode && x.Name == expenseCategory.Name
-                                                                                                         && x.VendAccount == expenseCategory.VendAccount && x.TaxGroup == expenseCategory.TaxGroup
+                                                                                                         && x.VendAccount == expenseCategory.VendAccount
                                                                                                          && x.IsInvoiceRequired == expenseCategory.IsInvoiceRequired && x.IsImageRequired == expenseCategory.IsImageRequired
                                                                                                          && x.IsDescriptionRequired == expenseCategory.IsDescriptionRequired && x.Id != expenseCategory.Id).FirstOrDefault();
 

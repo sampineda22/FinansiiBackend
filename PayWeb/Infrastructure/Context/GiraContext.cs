@@ -17,6 +17,9 @@ namespace CRM.Infrastructure.Context
             modelBuilder.ApplyConfiguration(new ExpenseAccountMap());
             modelBuilder.ApplyConfiguration(new TaxGroupMap());
             modelBuilder.ApplyConfiguration(new UserMap());
+            modelBuilder.ApplyConfiguration(new FuelTypeMap());
+            modelBuilder.ApplyConfiguration(new ExpenseDetailMap());
+            modelBuilder.ApplyConfiguration(new StatusMap());
         }
     }
 }
