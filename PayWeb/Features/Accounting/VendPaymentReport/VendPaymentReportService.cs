@@ -3,6 +3,7 @@ using ClosedXML.Excel;
 using CRM.Features.Accounting.AccountingConfiguration;
 using DocumentFormat.OpenXml.Drawing;
 using DocumentFormat.OpenXml.Drawing.Diagrams;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.Data.SqlClient;
 using PayWeb.Common;
 using PayWeb.Features.Users;
@@ -118,7 +119,8 @@ namespace CRM.Features.Accounting.VendPaymentReport
                 string[] headerValues = new string[headers.Length];
                 string[] columns= { "Linea", "Asiento", "Nombre de la Cuenta", "Descripción", "Débito", "Estado de Pago" };
                 string logoPath = @$"//GIM-SER-FINANZAS/Logos/", headerWithoutValue = "Proveedores a Pagar", totalAmountHeader = "Monto a Pagar:", warningsJoin = "";
-                int initialRow = 5, row = 0, lineCounter = 1, headerRow = 0, debitColumnNum = 5, headerSecondColumnRow = 0, lastColumnNumber = columns.Length, startDate = 0, endDate = 0;
+                int initialRow = 5, row = 0, lineCounter = 1, headerRow = 0, debitColumnNum = 5, headerSecondColumnRow = 0, lastColumnNumber = columns.Length, startDate = 0, endDate = 0,
+                    bodySize = 16;
                 byte[] pdfBytes = null;
 
                 response = GetVendPaymentLines(journalNum, companyCode);
@@ -219,6 +221,7 @@ namespace CRM.Features.Accounting.VendPaymentReport
                     }
                     worksheet.Cell($"A{row}").Value = headers[x];
                     worksheet.Cell($"A{row}").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                    worksheet.Cell($"A{row}").Style.Font.FontSize = bodySize;
                     row++;
                 }
 
@@ -249,18 +252,23 @@ namespace CRM.Features.Accounting.VendPaymentReport
                     }
 
                     worksheet.Cell($"B{row}").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                    worksheet.Cell($"B{row}").Style.Font.FontSize = bodySize;
                     row++;
                 }
 
                 worksheet.Cell(headerSecondColumnRow, lastColumnNumber-1).Value = "Fecha de Elaboración:";
                 worksheet.Cell(headerSecondColumnRow, lastColumnNumber - 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                worksheet.Cell(headerSecondColumnRow, lastColumnNumber - 1).Style.Font.FontSize = bodySize;
                 worksheet.Cell(headerSecondColumnRow+1, lastColumnNumber - 1).Value = "Elaborado por:";
                 worksheet.Cell(headerSecondColumnRow+1, lastColumnNumber - 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                worksheet.Cell(headerSecondColumnRow + 1, lastColumnNumber - 1).Style.Font.FontSize = bodySize;
 
                 worksheet.Cell(headerSecondColumnRow, lastColumnNumber).Value = DateTime.Now.ToString("dd-MMM-yyyy", new System.Globalization.CultureInfo("es-ES"));
                 worksheet.Cell(headerSecondColumnRow, lastColumnNumber).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                worksheet.Cell(headerSecondColumnRow, lastColumnNumber).Style.Font.FontSize = bodySize;
                 worksheet.Cell(headerSecondColumnRow + 1, lastColumnNumber).Value = userDto != null ? $"{userDto.FirstName} {userDto.FirstLastName}" : user;
                 worksheet.Cell(headerSecondColumnRow + 1, lastColumnNumber).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                worksheet.Cell(headerSecondColumnRow + 1, lastColumnNumber).Style.Font.FontSize = bodySize;
 
                 row++;
                 for (int x = 0; x < columns.Length; x++)
@@ -269,6 +277,7 @@ namespace CRM.Features.Accounting.VendPaymentReport
 
                     worksheet.Cell(row, columnNumber).Value = columns[x];
                     worksheet.Cell(row, columnNumber).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    worksheet.Cell(row, columnNumber).Style.Font.FontSize = bodySize;
                 }
 
                 headerRow = row;
@@ -290,6 +299,8 @@ namespace CRM.Features.Accounting.VendPaymentReport
                     {
                         int columnNumber = x + 1;
                         var cell = worksheet.Cell(row, columnNumber);
+
+                        worksheet.Cell(row, columnNumber).Style.Font.FontSize = bodySize;
 
                         switch (values[x])
                         {
@@ -314,7 +325,6 @@ namespace CRM.Features.Accounting.VendPaymentReport
                     worksheet.Cell(row, debitColumnNum).Style.NumberFormat.Format = line.CurrencyCode == "HNL" ? "\"L\" #,##0.00" :
                                                                                     line.CurrencyCode == "USD" ? "\"$\" #,##0.00"
                                                                                     : "#,##0.00";
-
                     row++;
                     lineCounter++;
                 }
@@ -350,6 +360,11 @@ namespace CRM.Features.Accounting.VendPaymentReport
 
                 worksheet.Columns().AdjustToContents();
                 worksheet.Rows().AdjustToContents();
+
+                foreach (var tableRow in table.DataRange.Rows())
+                {
+                    worksheet.Row(tableRow.RowNumber()).Height = 30;
+                }
 
                 workbook.SaveAs(memoryStream);
                 memoryStream.Position = 0;
