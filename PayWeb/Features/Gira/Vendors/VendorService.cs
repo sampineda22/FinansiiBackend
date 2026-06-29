@@ -1,9 +1,15 @@
-﻿using CRM.Features.Gira.ExpensesDetails;
-using CRM.Features.Gira.Historical;
-using CRM.GeneralDTOs;
+﻿using CRM.GeneralDTOs;
+using CRM.Models.General;
+using Microsoft.Data.SqlClient;
 using PayWeb.Common;
 using PayWeb.Infrastructure.Core;
 using System;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Mail;
+using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace CRM.Features.Gira.Vendors
@@ -16,115 +22,67 @@ namespace CRM.Features.Gira.Vendors
         {
             _unitOfWork = unitOfWork;
         }
-        public async Task<EntityResponse> SendEmailNewVendor()
+        public async Task<EntityResponse> SendEmailNewVendor(string companyCode)
         {
             try
             {
-                bool isNewSequence = false;
-                InvoiceSequence sequence = new();
+                using var httpClient = new HttpClient();
+                SqlParameter[] parameters = { };
+                string rutaImagen = "";
 
-                ExpenseDetail expenseDetail = _unitOfWorkGira.Repository<ExpenseDetail>().Query().Include(x => x.Status).Where(x => x.CompanyCode == detail.CompanyCode && x.InvoiceId == x.InvoiceId && x.VendAccount == detail.VendAccount && x.Status.Code != "R").FirstOrDefault();
+                EmailAccount account = _unitOfWork.Repository<EmailAccount>().GetSP<EmailAccount>("[dbo].[GetEmailAccount]", parameters).FirstOrDefault();
+                RoutePath path = _unitOfWork.Repository<RoutePath>().Query().Where(x => x.Name == "Logos").FirstOrDefault();
 
-                if (expenseDetail != null)
+                rutaImagen = $"{path.URL}/{companyCode}.jpg";
+
+                byte[] imageBytes = await httpClient.GetByteArrayAsync(rutaImagen);
+
+                using var imageStream = new MemoryStream(imageBytes);
+                MailMessage message = new MailMessage
                 {
-                    return EntityResponse.CreateError("Se encontró un gasto con la misma factura y proveedor.");
-                }
+                    From = new MailAddress(account.EmailAddress),
+                    Subject = "Solicitud de Nuevo Proveedor"
+                };
 
-                ExpenseCategory category = _unitOfWorkGira.Repository<ExpenseCategory>().Query().Where(x => x.CompanyCode == detail.CompanyCode && x.Id == detail.ExpenseCategoryId).FirstOrDefault();
+                message.To.Add("spineda@intermoda.com.hn");
 
-                /*var objects = ObjectDictionary.CreateObjectMap(new (string, object)[]
+                string htmlBody = @"
+                <html>
+                    <body style='text-align:center;'>
+                        <img src='cid:LogoEmpresa' style='width:300px; height:100px;' />
+                        <h2>Hola</h2>
+                        <p>La siguiente imagen se cargó desde una URL:</p>
+                        
+                    </body>
+                </html>";
+
+                AlternateView htmlView = AlternateView.CreateAlternateViewFromString(
+                    htmlBody,
+                    null,
+                    MediaTypeNames.Text.Html);
+
+                LinkedResource imageResource = new LinkedResource(imageStream, "image/png")
                 {
-                    (nameof(ExpenseCategory), category),
-                    (nameof(ExpenseDetail), detail)
-                });*/
+                    ContentId = "LogoEmpresa",
+                    TransferEncoding = TransferEncoding.Base64
+                };
 
-                if ((category?.Name.ToLower()).Contains("alimentacion"))
+                htmlView.LinkedResources.Add(imageResource);
+                message.AlternateViews.Add(htmlView);
+
+                using SmtpClient smtp = new SmtpClient("smtp.office365.com", 587)
                 {
-                    if (detail.MealId == null || detail.MealId == 0)
-                    {
-                        return EntityResponse.CreateError("No se pudo obtener el tipo de alimento. Favor validar que haya sido ingresado.");
-                    }
-                }
-                else if ((category?.Name.ToLower()).Contains("combustible") && detail.CompanyCode == "IMGT")
-                {
-                    if (detail.FuelTypeId == null || detail.FuelTypeId == 0)
-                    {
-                        return EntityResponse.CreateError("No se pudo obtener el tipo de combustible. Favor validar que haya sido ingresado.");
-                    }
-                }
+                    EnableSsl = true,
+                    Credentials = new NetworkCredential(account.EmailAddress, account.Password)
+                };
 
-                Status status = _unitOfWorkGira.Repository<Status>().Query().Where(x => x.Code == "P").FirstOrDefault();
-                detail.StatusId = status.Id;
-
-                if (detail.InvoiceId == null || detail.InvoiceId.Replace(" ", "") == "")
-                {
-                    SqlParameter[] parameters =
-                    {
-                        new SqlParameter("@CompanyCode", detail.CompanyCode),
-                        new SqlParameter("@PersonalCode", detail.PersonalCode)
-                    };
-
-                    CostCenterByUser userInfo = _unitOfWork.Repository<CostCenterByUser>().GetSP<CostCenterByUser>("[Gira].[GetCostCenterDtosByUser]", parameters).FirstOrDefault();
-                    sequence = _unitOfWorkGira.Repository<InvoiceSequence>().Query().Where(x => x.CompanyCode == detail.CompanyCode && x.Initials == userInfo.BusinessUnit).FirstOrDefault();
-
-                    if (sequence == null)
-                    {
-                        InvoiceSequence newSequence = new()
-                        {
-                            CompanyCode = detail.CompanyCode,
-                            Initials = userInfo.BusinessUnit,
-                            SequenceNumber = 1,
-                            CurrentSequence = $"{userInfo.BusinessUnit}{1:D4}"
-                        };
-
-                        /*_unitOfWorkGira.Repository<InvoiceSequence>().Add(newSequence);
-                        await _unitOfWorkGira.SaveChangesAsync();*/
-                        sequence = newSequence;
-                    }
-                    else
-                    {
-                        sequence.SequenceNumber++;
-                        sequence.CurrentSequence = $"{userInfo.BusinessUnit}{sequence.SequenceNumber:D4}";
-                        /*_unitOfWorkGira.Repository<InvoiceSequence>().Update(sequence);
-                        await _unitOfWorkGira.SaveChangesAsync();*/
-                    }
-
-                    isNewSequence = true;
-                    detail.InvoiceId = sequence.CurrentSequence;
-                }
-
-                string path = GetPath("GetGiraImg");
-
-                if (string.IsNullOrEmpty(path))
-                {
-                    return EntityResponse.CreateError("No se pudo obtener la ruta en donde se guardará la información");
-                }
-
-                var fullPath = $"{path}/{detail.ImagePath}";
-
-                detail.ImagePath = fullPath;
-
-                _unitOfWorkGira.Repository<ExpenseDetail>().Add(detail);
-                await _unitOfWorkGira.SaveChangesAsync();
-
-                if (isNewSequence)
-                {
-                    if (sequence.SequenceNumber == 1)
-                    {
-                        _unitOfWorkGira.Repository<InvoiceSequence>().Add(sequence);
-                    }
-                    else
-                    {
-                        _unitOfWorkGira.Repository<InvoiceSequence>().Update(sequence);
-                    }
-                    await _unitOfWorkGira.SaveChangesAsync();
-                }
-
-                return EntityResponse.CreateOk(detail);
+                await smtp.SendMailAsync(message);
+                
+                return EntityResponse.CreateOk("");
             }
             catch (Exception ex)
             {
-                return EntityResponse.CreateError("Error en PostExpenseDetail: " + ex.Message);
+                return EntityResponse.CreateError("Error en SendEmailNewVendor: " + ex.Message);
             }
         }
     }
