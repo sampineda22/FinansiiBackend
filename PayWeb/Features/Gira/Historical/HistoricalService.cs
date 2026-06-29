@@ -30,7 +30,7 @@ namespace CRM.Features.Gira.Historical
             _evaConnectionSettings = evaConnectionSettings.Value;
         }
 
-        public async Task<EntityResponse> GetHistoricalDetails(string companyCode, string personalCode, int expenseType, DateTime startDate, DateTime endDate)
+        public async Task<EntityResponse> GetHistoricalDetails(string companyCode, string? personalCode, int expenseType, DateTime startDate, DateTime endDate, bool filterByAdmin)
         {
             try
             {
@@ -40,7 +40,8 @@ namespace CRM.Features.Gira.Historical
                     new SqlParameter("@startDate", startDate),
                     new SqlParameter("@endDate", endDate),
                     new SqlParameter("@personalCode", (object?)personalCode ?? DBNull.Value),
-                    new SqlParameter("@idExpenseType", expenseType)
+                    new SqlParameter("@idExpenseType", expenseType),
+                    new SqlParameter("@filterByAdmin", filterByAdmin)
                 };
 
                 List<ExpenseDetailDto> details = _unitOfWork.Repository<ExpenseDetailDto>().GetSP<ExpenseDetailDto>("[Gira].[GetExpensesDetailsByFilters]", parameters).ToList();
@@ -78,7 +79,7 @@ namespace CRM.Features.Gira.Historical
 
                 List<SalesAgent> salesAgents = _unitOfWork.Repository<SalesAgent>().GetSP<SalesAgent>("[Finansii].[GetSalesAgents]", parameters).ToList();
 
-                EntityResponse response = this.GetHistoricalDetails(companyCode, salesAgent, expenseType, startDate, endDate).Result;
+                EntityResponse response = this.GetHistoricalDetails(companyCode, salesAgent, expenseType, startDate, endDate, false).Result;
                 if (response is EntityResponse<List<ExpenseDetail>> genericResponse)
                 {
                     expenseDetails = genericResponse.Data;

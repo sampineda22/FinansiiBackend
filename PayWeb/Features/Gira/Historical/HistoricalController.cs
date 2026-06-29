@@ -10,7 +10,7 @@ namespace CRM.Features.Gira.Historical
 {
     [Route("[Controller]")]
     [ApiController]
-    [Authorize]
+
     public class HistoricalController : ControllerBase
     {
         private readonly HistoricalService _historicalService;
@@ -25,7 +25,7 @@ namespace CRM.Features.Gira.Historical
         {
             try
             {
-                EntityResponse response = await _historicalService.GetHistoricalDetails(companyCode, personalCode, expenseType, startDate, endDate);
+                EntityResponse response = await _historicalService.GetHistoricalDetails(companyCode, personalCode, expenseType, startDate, endDate.Date, true);
 
                 if (!response.Ok)
                 {
@@ -39,6 +39,26 @@ namespace CRM.Features.Gira.Historical
             }
         }
 
+        [HttpGet("HistoricalDetailsRevision/{companyCode}/{expenseType}/{startDate}/{endDate}")]
+        public async Task<IActionResult> HistoricalDetailsRevision(string companyCode, int expenseType, DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                EntityResponse response = await _historicalService.GetHistoricalDetails(companyCode, null, expenseType, startDate, endDate, false);
+
+                if (!response.Ok)
+                {
+                    return BadRequest(response);
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Error en método get HistoricalDetails: " + ex.Message);
+            }
+        }
+        
+        [Authorize]
         [HttpGet("DownloadExcel/{companyCode}/{salesAgent}/{expenseType}/{startDate}/{endDate}")]
         public IActionResult DownloadExcel(string companyCode, string salesAgent, int expenseType, DateTime startDate, DateTime endDate)
         {
