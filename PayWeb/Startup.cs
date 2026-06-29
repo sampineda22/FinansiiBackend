@@ -9,7 +9,6 @@ using CRM.Features.Accounting.ProvidersReport;
 using CRM.Features.Admin.Screen;
 using CRM.Features.Admin.Users;
 using CRM.Features.Accounting.VendPaymentReport;
-using CRM.Features.Admin.Roles;
 using CRM.Features.Credits.ReceiptBreakdown;
 using CRM.Features.Credits.ReceiptBreakdownReport;
 using CRM.Features.Gira.Approve;
@@ -32,6 +31,8 @@ using PayWeb.Features.Security;
 using PayWeb.Infrastructure.Core;
 using System;
 using System.Text;
+using CRM.Features.Gira.PendingAX;
+using CRM.Features.Gira.ExpensesDetails;
 
 namespace PayWeb
 {
@@ -176,6 +177,8 @@ namespace PayWeb
             services.AddScoped<AXExpensesService>();
             services.AddScoped<VendPaymentReportService>();
             services.AddScoped<AccountingConfigurationService>();
+            services.AddScoped<PendingAXService>();
+            services.AddScoped<ExpenseDetailService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -194,7 +197,7 @@ namespace PayWeb
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "JWT Auth Demo V1");
-                c.DocumentTitle = "JWT Auth Demo";
+                c.DocumentTitle = "FinansiiApi";
             });
 
             app.UseRouting();

@@ -20,8 +20,8 @@ namespace CRM.Features.Gira.Historical
             _historicalService = historicalService;
         }
 
-        [HttpGet("HistoricalDetails/{companyCode}/{expenseType}/{startDate}/{endDate}/{personalCode?}")]
-        public async Task<IActionResult> HistoricalDetails(string companyCode, int expenseType, DateTime startDate, DateTime endDate, string? personalCode)
+        [HttpGet("HistoricalDetails/{companyCode}/{expenseType}/{startDate}/{endDate}")]
+        public async Task<IActionResult> HistoricalDetails(string companyCode, int expenseType, DateTime startDate, DateTime endDate, [FromQuery] string? personalCode)
         {
             try
             {

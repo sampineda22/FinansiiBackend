@@ -11,9 +11,9 @@ namespace CRM.Features.Gira.Historical
         public int? FuelTypeId { get; set; }
         public int StatusId { get; set; }
         public string PersonalCode {  get; set; }
-        public string? VendAccount { get; set; }
+        public string? VendAccount { get; set; }        
         public string? Description { get; set; }
-        public string InvoiceId { get; set; }
+        public string? InvoiceId { get; set; }
         public string? SeriesNum { get; set; }
         public double? ExemptAmount { get; set; }
         public double? GravadoAmount { get; set; }
@@ -25,6 +25,7 @@ namespace CRM.Features.Gira.Historical
         public string? RejectionMotive { get; set; }
         public string? JournalNum { get; set; }
         public string CompanyCode { get; set; }
+        public string? AXMessage { get;set; }
         public bool InUse { get; set; }
         public virtual ExpenseCategory ExpenseCategory { get; set; }
         public virtual FuelType FuelType { get; set; }
@@ -35,11 +36,14 @@ namespace CRM.Features.Gira.Historical
     {
         public int Id { get; set; }
         public int ExpenseCategoryId { get; set; }
-        public int MealId { get; set; }
+        public int? MealId { get; set; }
         public int? FuelTypeId { get; set; }
         public int StatusId { get; set; }
         public string PersonalCode { get; set; }
         public string? VendAccount { get; set; }
+        public string? VendName { get; set; }
+        public string? VatNum { get; set; }
+        public string? Currency { get; set; }
         public string? Description { get; set; }
         public string InvoiceId { get; set; }
         public string? SeriesNum { get; set; }
@@ -53,6 +57,7 @@ namespace CRM.Features.Gira.Historical
         public string? RejectionMotive { get; set; }
         public string? JournalNum { get; set; }
         public string CompanyCode { get; set; }
+        public string? AXMessage { get; set; }
         public bool InUse { get; set; }
         public string? ExpenseCategoryName { get; set; }
         public string? ExpenseTypeName { get; set; }

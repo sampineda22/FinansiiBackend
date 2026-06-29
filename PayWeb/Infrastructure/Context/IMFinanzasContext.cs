@@ -3,6 +3,7 @@ using CRM.Infrastructure.Maps.Accounting;
 using CRM.Infrastructure.Maps.Accounting.BankStatement;
 using CRM.Infrastructure.Maps.Accounting.BankStatements;
 using CRM.Infrastructure.Maps.Accounting.CD;
+using CRM.Infrastructure.Maps.Accounting.VendPaymentReport;
 using CRM.Infrastructure.Maps.Admin;
 using CRM.Infrastructure.Maps.Credits;
 using CRM.Infrastructure.Maps.General;
@@ -38,6 +39,8 @@ namespace CRM.Infrastructure.Context
             modelBuilder.ApplyConfiguration(new ScreenMap());
             modelBuilder.ApplyConfiguration(new UserRolesMap());
             modelBuilder.ApplyConfiguration(new RoleScreensMap());
+            modelBuilder.ApplyConfiguration(new PaymentDateMap());
+            modelBuilder.ApplyConfiguration(new ValidationMap());
         }
     }
 }

@@ -3,10 +3,8 @@ using CRM.Features.Credits.ReceiptBreakdownReport;
 using CRM.Features.Credits.ReceiptDetailBreakdownReport;
 using CRM.Features.Gira.ExpensesSettings;
 using CRM.Infrastructure.Core;
-using CRM.Migrations.Gira;
-using CRM.Models.Finansii;
+using CRM.Models.General;
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PayWeb.Common;
 using PayWeb.Infrastructure.Core;
@@ -239,32 +237,31 @@ namespace CRM.Features.Gira.Historical
         {
             try
             {
-                ExpenseDetail expenseDetail = _unitOfWorkGira.Repository<ExpenseDetail>().Query().Where(x => x.Id == id && x.CompanyCode == companyCode).FirstOrDefault();
+                ExpenseDetail expenseDetail = _unitOfWorkGira.Repository<ExpenseDetail>().Query().Where(x => x.Id == id && x.CompanyCode == companyCode).FirstOrDefault();                
 
-                if(String.IsNullOrEmpty(expenseDetail.ImagePath))
+                if (String.IsNullOrEmpty(expenseDetail.ImagePath))
                 {
                     return EntityResponse.CreateError("No se encontro una imagen para el gasto.");
                 }
 
-                var basePath = _evaConnectionSettings.Folder + "Gira/";
+                /*var basePath = _evaConnectionSettings.Folder + "Gira/";
                 var relativePath = expenseDetail.ImagePath.Replace("\\", "/").TrimStart('/');
-                var fullPath = $"{basePath}{relativePath}";
+                var fullPath = $"{basePath}{relativePath}";*/
 
                 using var httpClient = new HttpClient();
 
-                var request = new HttpRequestMessage(HttpMethod.Head, fullPath);
+                var request = new HttpRequestMessage(HttpMethod.Head, expenseDetail.ImagePath/*fullPath*/);
                 var response = await httpClient.SendAsync(request);
 
                 if (!response.IsSuccessStatusCode)
                     return EntityResponse.CreateError("Favor validar que la imagen se haya guardado correctamente.");
 
-                return EntityResponse.CreateOk(fullPath);
+                return EntityResponse.CreateOk(expenseDetail.ImagePath);
             }
             catch (Exception ex)
             {
                 return EntityResponse.CreateError(ex.Message);
             }
-
         }
     }
 }

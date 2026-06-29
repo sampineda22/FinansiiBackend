@@ -20,6 +20,8 @@ namespace CRM.Infrastructure.Context
             modelBuilder.ApplyConfiguration(new FuelTypeMap());
             modelBuilder.ApplyConfiguration(new ExpenseDetailMap());
             modelBuilder.ApplyConfiguration(new StatusMap());
+            modelBuilder.ApplyConfiguration(new AutoApprovePositionMap());
+            modelBuilder.ApplyConfiguration(new InvoiceSequenceMap());
         }
     }
 }

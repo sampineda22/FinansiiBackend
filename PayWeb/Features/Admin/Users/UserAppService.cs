@@ -32,7 +32,8 @@ namespace CRM.Features.Admin.Users
                         Password = u.Password,
                         State = u.State,
                         CreateDateTime = u.CreateDateTime,
-                        CompanyCode = u.Cod_Empresa
+                        CompanyCode = u.Cod_Empresa,
+                        PersonalCode = u.PersonalCode
                     }).FirstOrDefault();
         }
 

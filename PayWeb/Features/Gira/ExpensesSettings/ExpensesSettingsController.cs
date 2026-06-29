@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PayWeb.Common;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using static CRM.Infrastructure.Enum.Meals;
 
 namespace CRM.Features.Gira.ExpensesSettings
 {
@@ -362,6 +364,51 @@ namespace CRM.Features.Gira.ExpensesSettings
             catch (Exception ex)
             {
                 return BadRequest("Error en método put ResetPassword: " + ex.Message);
+            }
+        }
+        #endregion
+
+        #region Meals
+        [HttpGet("Meals")]
+        public async Task<IActionResult> Meals()
+        {
+            try
+            {
+                var lista = Enum.GetValues(typeof(MealsType))
+                            .Cast<MealsType>()
+                            .Select(x => new
+                            {
+                                Id = (int)x,
+                                Name = x.ToString()
+                            })
+                            .ToList();
+
+                return Ok(EntityResponse.CreateOk(lista));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Error en método Meals: " + ex.Message);
+            }
+        }
+        #endregion
+
+        #region FuelTypes
+        [HttpGet("FuelTypes/{companyCode}")]
+        public async Task<IActionResult> FuelTypes(string companyCode)
+        {
+            try
+            {
+                EntityResponse response = await _expensesSettingsService.GetFuelTypes(companyCode);
+
+                if (!response.Ok)
+                {
+                    return BadRequest(response);
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Error en método get TaxGroups: " + ex.Message);
             }
         }
         #endregion

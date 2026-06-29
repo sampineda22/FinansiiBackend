@@ -52,13 +52,17 @@ namespace PayWeb.Features.Security
                 }
             }
 
-            request.CompanyCode = _userService.FindByUserId(request.User).CompanyCode;
+            UserDto userDto = _userService.FindByUserId(request.User);
+
+            request.CompanyCode = userDto.CompanyCode;
+            request.PersonalCode = userDto.PersonalCode;
 
             var claims = new[]
             {
                 new Claim(ClaimTypes.Name, request.User),
                 new Claim("Cod_Empresa",request.CompanyCode),
-                new Claim("Contra",request.Password)
+                new Claim("Contra",request.Password),
+                new Claim("PersonalCode", request.PersonalCode)
 
             };
 
@@ -69,7 +73,8 @@ namespace PayWeb.Features.Security
                 UserId = request.User,
                 AccessToken = jwtResult.AccessToken,
                 RefreshToken = jwtResult.RefreshToken.TokenString,
-                CompanyCode = request.CompanyCode
+                CompanyCode = request.CompanyCode,
+                PersonalCode = request.PersonalCode
             });
         }
 
@@ -151,6 +156,7 @@ namespace PayWeb.Features.Security
         [JsonPropertyName("password")]
         public string Password { get; set; }
         public string CompanyCode { get; set; }
+        public string PersonalCode { get; set; }
     }
     public class LoginUserPasswordRequest
     {
@@ -177,6 +183,7 @@ namespace PayWeb.Features.Security
         [JsonPropertyName("refreshToken")]
         public string RefreshToken { get; set; }
         public string CompanyCode { get; set; }
+        public string PersonalCode { get; set; }
         public int CodEmpresaInt { get; set; }
     }
     public class LoginWithCompanyResult

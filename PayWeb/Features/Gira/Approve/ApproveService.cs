@@ -1,17 +1,13 @@
 ﻿using CRM.DTOs;
-using CRM.Features.Accounting.BankStatement;
-using CRM.Features.Credits.ReceiptDetailBreakdownReport;
 using CRM.Features.Gira.AXExpenses;
 using CRM.Features.Gira.ExpensesSettings;
 using CRM.Features.Gira.Historical;
 using CRM.GeneralDTOs;
 using CRM.Infrastructure.Core;
 using CRM.Infrastructure.Enum;
-using DocumentFormat.OpenXml.Drawing;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Microsoft.Reporting.Map.WebForms.BingMaps;
 using PayWeb.Common;
 using PayWeb.Infrastructure.Core;
 using RestSharp;
@@ -90,12 +86,14 @@ namespace CRM.Features.Gira.Approve
 
                     detail.StatusId = statuses.Find(x => x.Code == ExpensesStatus.Status.APROBADO.ToString()).Id;
                     detail.PersonalCodeAdmin = personalCode;
+                    detail.AXMessage = null;
 
                     EntityResponse response = CreateJournal(companyCode, detail.Id).Result;
 
                     if (!response.Ok)
                     {
-                        detail.StatusId = statuses.Find(x => x.Code == ExpensesStatus.Status.PENDIENTEAX.ToString()).Id;
+                        detail.StatusId = !response.Mensaje.Contains("LD-") ? statuses.Find(x => x.Code == ExpensesStatus.Status.PENDIENTEAX.ToString()).Id : detail.StatusId;
+                        detail.AXMessage = response.Mensaje;
                         errorMessage = $"{response.Mensaje}";
                     }
 
@@ -106,6 +104,7 @@ namespace CRM.Features.Gira.Approve
                     else if (response is EntityResponse<string> genericResponse2)
                     {
                         detail.StatusId = statuses.Find(x => x.Code == ExpensesStatus.Status.PENDIENTEAX.ToString()).Id;
+                        detail.AXMessage = genericResponse2.Data.ToString();
                         errorMessage = $"{genericResponse2.Data.ToString()}";
                     }
                 }

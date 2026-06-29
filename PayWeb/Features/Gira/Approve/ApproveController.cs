@@ -61,13 +61,13 @@ namespace CRM.Features.Gira.Approve
             }
         }
 
-        [HttpPut("Status/{companyCode}/{id}/{rejectionMotive?}")]
-        public async Task<IActionResult> Status(string companyCode, int id, string rejectionMotive)
+        [HttpPut("Status/{companyCode}/{id}/{personalCode}/{rejectionMotive?}")]
+        public async Task<IActionResult> Status(string companyCode, int id, string personalCode, string rejectionMotive)
         {
             try
             {
                 string message = String.IsNullOrEmpty(rejectionMotive) ? "aprobado" : "rechazado";
-                EntityResponse response = await _approveService.UpdateStatus(companyCode, id, rejectionMotive, loggedUser.PersonalCode);
+                EntityResponse response = await _approveService.UpdateStatus(companyCode, id, rejectionMotive, personalCode);
 
                 if (!response.Ok)
                 {

@@ -4,14 +4,16 @@ using CRM.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CRM.Migrations.Gira
 {
     [DbContext(typeof(GiraContext))]
-    partial class GiraContextModelSnapshot : ModelSnapshot
+    [Migration("20260625150150_AutoApprovePositionsMap")]
+    partial class AutoApprovePositionsMap
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -49,39 +51,6 @@ namespace CRM.Migrations.Gira
                         .IsUnique();
 
                     b.ToTable("AutoApprovePositions", "Gira");
-                });
-
-            modelBuilder.Entity("CRM.Features.Gira.ExpensesDetails.InvoiceSequence", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("CompanyCode")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
-                    b.Property<string>("CurrentSequence")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Initials")
-                        .IsRequired()
-                        .HasMaxLength(6)
-                        .HasColumnType("nvarchar(6)");
-
-                    b.Property<int>("SequenceNumber")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompanyCode", "Initials")
-                        .IsUnique();
-
-                    b.ToTable("InvoicesSequences", "Gira");
                 });
 
             modelBuilder.Entity("CRM.Features.Gira.ExpensesSettings.ExpenseAccount", b =>
@@ -334,6 +303,7 @@ namespace CRM.Migrations.Gira
                         .HasDefaultValueSql("'1900-01-01'");
 
                     b.Property<string>("InvoiceId")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 

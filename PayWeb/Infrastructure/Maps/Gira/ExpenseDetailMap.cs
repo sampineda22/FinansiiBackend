@@ -16,7 +16,7 @@ namespace CRM.Infrastructure.Maps.Gira
             builder.Property(e => e.PersonalCode).HasMaxLength(20).IsRequired();
             builder.Property(e => e.VendAccount).HasMaxLength(50);
             builder.Property(e => e.Description).HasMaxLength(250);
-            builder.Property(e => e.InvoiceId).HasMaxLength(50).IsRequired();
+            builder.Property(e => e.InvoiceId).HasMaxLength(50);
             builder.Property(e => e.SeriesNum).HasMaxLength(20);
             builder.Property(e => e.InvoiceAmount).IsRequired();
             builder.Property(e => e.InvoiceDate).HasColumnType("datetime").IsRequired().HasDefaultValueSql("'1900-01-01'");
@@ -26,6 +26,7 @@ namespace CRM.Infrastructure.Maps.Gira
             builder.Property(e => e.RejectionMotive).HasMaxLength(250);
             builder.Property(e => e.JournalNum).HasMaxLength(30);
             builder.Property(e => e.CompanyCode).HasMaxLength(4).IsRequired();
+            builder.Property(e => e.AXMessage).HasMaxLength(300);
 
             builder.HasOne(e => e.ExpenseCategory)
                 .WithMany(e => e.ExpenseDetails)

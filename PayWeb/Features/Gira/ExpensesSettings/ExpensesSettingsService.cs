@@ -1,5 +1,7 @@
-﻿using CRM.GeneralDTOs;
+﻿using CRM.Features.Gira.Historical;
+using CRM.GeneralDTOs;
 using CRM.Infrastructure.Core;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -144,6 +146,19 @@ namespace CRM.Features.Gira.ExpensesSettings
             catch (Exception ex)
             {
                 return EntityResponse.CreateError("Error en GetMainAccounts: " + ex.Message);
+            }
+        }
+
+        public async Task<EntityResponse> GetFuelTypes(string companyCode)
+        {
+            try
+            {
+                List<FuelType> types = _unitOfWorkGira.Repository<FuelType>().Query().Where(x => x.CompanyCode == companyCode).ToList();
+                return EntityResponse.CreateOk(types);
+            }
+            catch (Exception ex)
+            {
+                return EntityResponse.CreateError("Error en GetFuelTypes: " + ex.Message);
             }
         }
 
