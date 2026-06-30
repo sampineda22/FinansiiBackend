@@ -11,7 +11,7 @@ namespace CRM.Features.Gira.ExpensesSettings
 {
     [Route("[Controller]")]
     [ApiController]
-    [Authorize]
+    
     public class ExpensesSettingsController : ControllerBase
     {
         private readonly ExpensesSettingsService _expensesSettingsService;
@@ -21,6 +21,7 @@ namespace CRM.Features.Gira.ExpensesSettings
             _expensesSettingsService = expensesSettingsService;
         }
 
+        
         #region ExpensesTypes
         [HttpGet("GetExpensesTypes/{companyCode}")]
         public async Task<IActionResult> GetExpensesTypes(string companyCode)
@@ -41,6 +42,7 @@ namespace CRM.Features.Gira.ExpensesSettings
             }
         }
 
+        [Authorize]
         [HttpPost("ExpenseType/{companyCode}")]
         public async Task<IActionResult> ExpenseType([FromBody] ExpenseType expenseType, string companyCode)
         {
@@ -62,6 +64,7 @@ namespace CRM.Features.Gira.ExpensesSettings
             }
         }
 
+        [Authorize]
         [HttpPost("Status")]
         public async Task<IActionResult> Status([FromBody] ExpenseType expenseType)
         {

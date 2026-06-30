@@ -9,7 +9,7 @@ namespace CRM.Features.Gira.ExpensesDetails
 {
     [Route("[Controller]")]
     [ApiController]
-    [Authorize]
+    
     public class ExpenseDetailController : ControllerBase
     {
         private readonly ExpenseDetailService _expenseDetailService;
@@ -44,6 +44,7 @@ namespace CRM.Features.Gira.ExpensesDetails
             }
         }
 
+        [Authorize]
         [HttpGet("Path/{projectName}")]
         public async Task<IActionResult> Path(string projectName)
         {

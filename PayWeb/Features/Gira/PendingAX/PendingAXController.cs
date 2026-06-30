@@ -8,7 +8,7 @@ namespace CRM.Features.Gira.PendingAX
 {
     [Route("[Controller]")]
     [ApiController]
-    [Authorize]
+    
     public class PendingAXController : ControllerBase
     {
         private readonly PendingAXService _pendingAXService;
@@ -18,6 +18,7 @@ namespace CRM.Features.Gira.PendingAX
             _pendingAXService = pendingAXService;
         }
 
+        [Authorize]
         [HttpGet("PendingAX/{companyCode}")]
         public async Task<IActionResult> PendingAX(string companyCode)
         {
