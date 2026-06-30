@@ -17,11 +17,11 @@ namespace CRM.Features.Gira.Vendors
         }
 
         [HttpPost("Vendor")]
-        public async Task<IActionResult> Vendor([FromBody] ExpenseDetail detail)
+        public async Task<IActionResult> Vendor()
         {
             try
             {
-                EntityResponse response = await _vendorService.SendEmailNewVendor(detail);
+                EntityResponse response = await _vendorService.SendEmailNewVendor("IMHN");
 
                 if (!response.Ok)
                 {

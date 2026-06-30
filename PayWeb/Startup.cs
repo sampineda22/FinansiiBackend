@@ -33,6 +33,7 @@ using System;
 using System.Text;
 using CRM.Features.Gira.PendingAX;
 using CRM.Features.Gira.ExpensesDetails;
+using CRM.Features.Gira.Vendors;
 
 namespace PayWeb
 {
@@ -179,6 +180,7 @@ namespace PayWeb
             services.AddScoped<AccountingConfigurationService>();
             services.AddScoped<PendingAXService>();
             services.AddScoped<ExpenseDetailService>();
+            services.AddScoped<VendorService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
