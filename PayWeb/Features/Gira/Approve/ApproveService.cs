@@ -1,4 +1,5 @@
-﻿using CRM.Features.Admin.Users;
+﻿using Azure;
+using CRM.Features.Admin.Users;
 using CRM.Features.Gira.AXExpenses;
 using CRM.Features.Gira.Historical;
 using CRM.General;
@@ -8,6 +9,7 @@ using CRM.Infrastructure.Enum;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using PayWeb.Common;
 using PayWeb.Infrastructure.Core;
 using RestSharp;
@@ -16,7 +18,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Net.Mail;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using ExpenseAccount = CRM.Features.Gira.ExpensesSettings.ExpenseAccount;
@@ -30,13 +35,15 @@ namespace CRM.Features.Gira.Approve
         private readonly IUnitOfWork _unitOfWork;
         private readonly GeneralService _generalService;
         private readonly ProxyConnectionSettings _proxyConnectionSettings;
+        private readonly IHttpClientFactory _factory;
 
-        public ApproveService(IUnitOfWorkGira unitOfWorkGira, IUnitOfWork unitOfWork, IOptions<ProxyConnectionSettings> proxyConnectionSettings, GeneralService generalService)
+        public ApproveService(IUnitOfWorkGira unitOfWorkGira, IUnitOfWork unitOfWork, IOptions<ProxyConnectionSettings> proxyConnectionSettings, GeneralService generalService, IHttpClientFactory factory)
         {
             _unitOfWorkGira = unitOfWorkGira;
             _unitOfWork = unitOfWork;
             _proxyConnectionSettings = proxyConnectionSettings.Value;
             _generalService = generalService;
+            _factory = factory;
         }
 
         public async Task<EntityResponse> GetPendingApprovals(string companyCode)
@@ -163,7 +170,7 @@ namespace CRM.Features.Gira.Approve
 
                 data.USERID = data.USERID.ToUpper();
 
-                var client = new RestClient();
+                /*var client = new RestClient();
                 var request = new RestRequest($"{_proxyConnectionSettings.Url}api/Gira/GiraJournalLine/{companyCode}/{user}", Method.Post)
                 {
                     RequestFormat = DataFormat.Json
@@ -171,19 +178,27 @@ namespace CRM.Features.Gira.Approve
 
                 request.AddHeader("Content-type", "application/json; charset=utf-8");
                 request.AddParameter("application/json", Newtonsoft.Json.JsonConvert.SerializeObject(data), ParameterType.RequestBody);
-                var response = client.Execute(request);
+                var response = client.Execute(request);*/
 
-                if (response.Content.Contains("ErrorSystem") || response.Content.Contains("Error"))
+                using var client = new HttpClient();
+
+                var url = $"{_proxyConnectionSettings.Url}api/Gira/GiraJournalLine/{companyCode}/{user}";
+
+                var response = await client.PostAsJsonAsync(url, data);
+
+                var result = await response.Content.ReadAsStringAsync();
+
+                if (result.Contains("ErrorSystem") || result.Contains("Error"))
                 {
-                    using JsonDocument doc = JsonDocument.Parse(response.Content);
+                    using JsonDocument doc = JsonDocument.Parse(result);
                     string message = doc.RootElement.GetProperty("Message").GetString();
 
                     return EntityResponse.CreateError(message);
 
-                }else if (response.Content.Contains("Cai"))
+                }else if (result.Contains("Cai"))
                 {
-                    var resp = Newtonsoft.Json.JsonConvert.DeserializeObject<string>(response.Content);
-                    EntityResponse res = await UpdateCAI(detail, response.Content);
+                    var resp = Newtonsoft.Json.JsonConvert.DeserializeObject<string>(result);
+                    EntityResponse res = await UpdateCAI(detail, result);
 
                     if (!res.Ok)
                     {
@@ -192,11 +207,11 @@ namespace CRM.Features.Gira.Approve
 
                     return EntityResponse.CreateError($"{resp}. Se realizó la solicitud de actualización del CAI a los correspondientes. Favor esperar a que se actualicé");
                 }
-                else if (response.Content.Contains("LD"))
+                else if (result.Contains("LD"))
                 {
-                    detail.JournalNum = response.Content.Replace("\"", "");
+                    detail.JournalNum = result.Replace("\"", "");
                 }
-                else if (response.Content.Contains("OK"))
+                else if (result.Contains("OK"))
                 {
                     return EntityResponse.CreateOk("Se creó el diario pero no se pudo almacenar el número de diario.");
                 }
