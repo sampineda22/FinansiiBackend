@@ -1,6 +1,6 @@
 ﻿namespace CRM.Features.Gira.AXExpenses
 {
-    public class ExpenseAXModel
+    public class JOURNALLINE
     {
         public string COMPANY { get; set; }
         public string CURRENCYCODE { get; set; }

@@ -35,15 +35,13 @@ namespace CRM.Features.Gira.Approve
         private readonly IUnitOfWork _unitOfWork;
         private readonly GeneralService _generalService;
         private readonly ProxyConnectionSettings _proxyConnectionSettings;
-        private readonly IHttpClientFactory _factory;
 
-        public ApproveService(IUnitOfWorkGira unitOfWorkGira, IUnitOfWork unitOfWork, IOptions<ProxyConnectionSettings> proxyConnectionSettings, GeneralService generalService, IHttpClientFactory factory)
+        public ApproveService(IUnitOfWorkGira unitOfWorkGira, IUnitOfWork unitOfWork, IOptions<ProxyConnectionSettings> proxyConnectionSettings, GeneralService generalService)
         {
             _unitOfWorkGira = unitOfWorkGira;
             _unitOfWork = unitOfWork;
             _proxyConnectionSettings = proxyConnectionSettings.Value;
             _generalService = generalService;
-            _factory = factory;
         }
 
         public async Task<EntityResponse> GetPendingApprovals(string companyCode)
@@ -161,7 +159,7 @@ namespace CRM.Features.Gira.Approve
                     new SqlParameter("@mealName", (object?)mealName ?? DBNull.Value)
                 };
 
-                ExpenseAXModel data = _unitOfWork.Repository<ExpenseAXModel>().GetSP<ExpenseAXModel>("[Gira].[CreateJournalLineForExpense]", parameters).FirstOrDefault();
+                JOURNALLINE data = _unitOfWork.Repository<JOURNALLINE>().GetSP<JOURNALLINE>("[Gira].[CreateJournalLineForExpense]", parameters).FirstOrDefault();
 
                 if (data == null)
                 {
@@ -169,16 +167,6 @@ namespace CRM.Features.Gira.Approve
                 }
 
                 data.USERID = data.USERID.ToUpper();
-
-                /*var client = new RestClient();
-                var request = new RestRequest($"{_proxyConnectionSettings.Url}api/Gira/GiraJournalLine/{companyCode}/{user}", Method.Post)
-                {
-                    RequestFormat = DataFormat.Json
-                };
-
-                request.AddHeader("Content-type", "application/json; charset=utf-8");
-                request.AddParameter("application/json", Newtonsoft.Json.JsonConvert.SerializeObject(data), ParameterType.RequestBody);
-                var response = client.Execute(request);*/
 
                 using var client = new HttpClient();
 
