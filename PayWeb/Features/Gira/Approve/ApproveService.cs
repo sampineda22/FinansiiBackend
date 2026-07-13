@@ -164,7 +164,7 @@ namespace CRM.Features.Gira.Approve
                 data.USERID = data.USERID.ToUpper();
 
                 var client = new RestClient();
-                var request = new RestRequest($"{_proxyConnectionSettings.Url}/Api/InsertJournalLine/GiraJournalLine/{companyCode}/{user}", Method.Post)
+                var request = new RestRequest($"{_proxyConnectionSettings.Url}api/Gira/GiraJournalLine/{companyCode}/{user}", Method.Post)
                 {
                     RequestFormat = DataFormat.Json
                 };
