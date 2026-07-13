@@ -57,12 +57,12 @@ namespace CRM.Features.Gira.PendingAX
             }
         }
 
-        [HttpPost("PendingAX/{companyCode}/{personalCode}")]
-        public async Task<IActionResult> PendingAX(string companyCode, string personalCode)
+        [HttpPost("PendingAX/{companyCode}/{personalCode}/{user}")]
+        public async Task<IActionResult> PendingAX(string companyCode, string personalCode, string user)
         {
             try
             {
-                EntityResponse response = await _pendingAXService.PostPendingAX(companyCode, personalCode);
+                EntityResponse response = await _pendingAXService.PostPendingAX(companyCode, personalCode, user);
 
                 if (!response.Ok)
                 {

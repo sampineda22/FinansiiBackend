@@ -67,7 +67,7 @@ namespace CRM.Features.Gira.PendingAX
             }
         }
 
-        public async Task<EntityResponse> PostPendingAX(string companyCode, string personalCode)
+        public async Task<EntityResponse> PostPendingAX(string companyCode, string personalCode, string user)
         {
             try
             {
@@ -88,7 +88,7 @@ namespace CRM.Features.Gira.PendingAX
 
                 foreach(ExpenseDetailDto detail in pendingDetails)
                 {
-                    response = await _approveService.UpdateStatus(companyCode, detail.Id, detail.RejectionMotive, detail.PersonalCode);
+                    response = await _approveService.UpdateStatus(companyCode, detail.Id, detail.RejectionMotive, detail.PersonalCode, user);
 
                     if (!response.Ok)
                     {
