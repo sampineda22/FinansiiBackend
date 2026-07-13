@@ -56,5 +56,24 @@ namespace CRM.Features.Gira.PendingAX
                 return BadRequest("Error en método get PendingAXByUser: " + ex.Message);
             }
         }
+
+        [HttpPost("PendingAX/{companyCode}/{personalCode}")]
+        public async Task<IActionResult> PendingAX(string companyCode, string personalCode)
+        {
+            try
+            {
+                EntityResponse response = await _pendingAXService.PostPendingAX(companyCode, personalCode);
+
+                if (!response.Ok)
+                {
+                    return BadRequest(response);
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Error en método get PendingAX: " + ex.Message);
+            }
+        }
     }
 }

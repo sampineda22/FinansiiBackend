@@ -270,7 +270,7 @@ namespace CRM.Features.Gira.ExpensesSettings
         #endregion
 
         #region Users
-        [HttpGet("Users/{companyCode}")]
+        /*[HttpGet("Users/{companyCode}")]
         public async Task<IActionResult> Users(string companyCode)
         {
             try
@@ -368,7 +368,7 @@ namespace CRM.Features.Gira.ExpensesSettings
             {
                 return BadRequest("Error en método put ResetPassword: " + ex.Message);
             }
-        }
+        }*/
         #endregion
 
         #region Meals

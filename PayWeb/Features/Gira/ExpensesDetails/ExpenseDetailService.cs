@@ -1,15 +1,18 @@
-﻿using CRM.Features.Gira.Historical;
-using CRM.GeneralDTOs;
+﻿using CRM.Features.Admin.Users;
+using CRM.Features.Gira.Approve;
+using CRM.Features.Gira.Historical;
+using CRM.General.GeneralDTOs;
 using CRM.Infrastructure.Core;
-using CRM.Models.General;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using PayWeb.Common;
 using PayWeb.Infrastructure.Core;
 using System;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using ExpenseCategory = CRM.Features.Gira.ExpensesSettings.ExpenseCategory;
+using RoutePath = CRM.Models.General.RoutePath;
 using Status = CRM.Features.Gira.Historical.Status;
 
 namespace CRM.Features.Gira.ExpensesDetails
@@ -30,8 +33,9 @@ namespace CRM.Features.Gira.ExpensesDetails
             {
                 bool isNewSequence = false;
                 InvoiceSequence sequence = new();
+                SqlParameter[] parameters = { };
 
-                ExpenseDetail expenseDetail = _unitOfWorkGira.Repository<ExpenseDetail>().Query().Include(x => x.Status).Where(x => x.CompanyCode == detail.CompanyCode && x.InvoiceId == x.InvoiceId && x.VendAccount == detail.VendAccount && x.Status.Code != "R").FirstOrDefault();
+                ExpenseDetail expenseDetail = _unitOfWorkGira.Repository<ExpenseDetail>().Query().Include(x => x.Status).Where(x => x.CompanyCode == detail.CompanyCode && x.InvoiceId == detail.InvoiceId && x.VendAccount == detail.VendAccount && x.Status.Code != "R").FirstOrDefault();
 
                 if (expenseDetail != null)
                 {
@@ -65,7 +69,7 @@ namespace CRM.Features.Gira.ExpensesDetails
 
                 if (detail.InvoiceId == null || detail.InvoiceId.Replace(" ", "") == "")
                 {
-                    SqlParameter[] parameters =
+                    parameters = new SqlParameter[]
                     {
                         new SqlParameter("@CompanyCode", detail.CompanyCode),
                         new SqlParameter("@PersonalCode", detail.PersonalCode)
@@ -79,24 +83,19 @@ namespace CRM.Features.Gira.ExpensesDetails
                         InvoiceSequence newSequence = new()
                         {
                             CompanyCode = detail.CompanyCode,
-                            Initials = userInfo.BusinessUnit,
+                            Initials = "G" + userInfo.BusinessUnit,
                             SequenceNumber = 1,
-                            CurrentSequence = $"{userInfo.BusinessUnit}{1:D4}"
+                            CurrentSequence = $"G{userInfo.BusinessUnit}{1:D4}"
                         };
-
-                        /*_unitOfWorkGira.Repository<InvoiceSequence>().Add(newSequence);
-                        await _unitOfWorkGira.SaveChangesAsync();*/
                         sequence = newSequence;
                     }
                     else
                     {
                         sequence.SequenceNumber++;
-                        sequence.CurrentSequence = $"{userInfo.BusinessUnit}{sequence.SequenceNumber:D4}";
-                        /*_unitOfWorkGira.Repository<InvoiceSequence>().Update(sequence);
-                        await _unitOfWorkGira.SaveChangesAsync();*/
+                        sequence.CurrentSequence = $"G{userInfo.BusinessUnit}{sequence.SequenceNumber:D4}";
                     }
 
-                    isNewSequence = true;
+                    //isNewSequence = true;
                     detail.InvoiceId = sequence.CurrentSequence;
                 }
 
@@ -110,6 +109,7 @@ namespace CRM.Features.Gira.ExpensesDetails
                 var fullPath = $"{path}/{detail.ImagePath}";
 
                 detail.ImagePath = fullPath;
+                detail.InUse = false;
 
                 _unitOfWorkGira.Repository<ExpenseDetail>().Add(detail);
                 await _unitOfWorkGira.SaveChangesAsync();
@@ -126,12 +126,38 @@ namespace CRM.Features.Gira.ExpensesDetails
                     }
                     await _unitOfWorkGira.SaveChangesAsync();
                 }
-                
+
                 return EntityResponse.CreateOk(detail);
             }
             catch (Exception ex)
             {
                 return EntityResponse.CreateError("Error en PostExpenseDetail: " + ex.Message);
+            }
+        }
+
+        public bool IsAutoApprovePosition(string companyCode, string personalCode)
+        {
+            try
+            {
+                SqlParameter[] parameters =
+                {
+                  new SqlParameter("@companyCode", companyCode),
+                  new SqlParameter("@personalCode",personalCode)
+                };
+
+                UserDto userDto = _unitOfWork.Repository<UserDto>().GetSP<UserDto>("[Finansii].[GetUsersInfo]", parameters).FirstOrDefault();
+
+                if (userDto != null)
+                {
+                    AutoApprovePosition position = _unitOfWorkGira.Repository<AutoApprovePosition>().Query().Where(x => x.CategoryCode == userDto.CategoryCode && x.PositionCode == userDto.PositionCode && x.CompanyCode == companyCode).FirstOrDefault();
+                    return position != null;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
             }
         }
 

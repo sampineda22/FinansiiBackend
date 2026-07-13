@@ -22,12 +22,10 @@ namespace CRM.Features.Gira.Historical
     {
         private readonly IUnitOfWorkGira _unitOfWorkGira;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly EVAConnectionSettings _evaConnectionSettings;
-        public HistoricalService(IUnitOfWorkGira unitOfWorkGira, IUnitOfWork unitOfWork, IOptions<EVAConnectionSettings> evaConnectionSettings)
+        public HistoricalService(IUnitOfWorkGira unitOfWorkGira, IUnitOfWork unitOfWork)
         {
             _unitOfWorkGira = unitOfWorkGira;
             _unitOfWork = unitOfWork;
-            _evaConnectionSettings = evaConnectionSettings.Value;
         }
 
         public async Task<EntityResponse> GetHistoricalDetails(string companyCode, string? personalCode, int expenseType, DateTime startDate, DateTime endDate, bool filterByAdmin)

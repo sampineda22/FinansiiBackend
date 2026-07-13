@@ -1,0 +1,100 @@
+﻿using CRM.General.GeneralDTOs;
+using CRM.Models.General;
+using Microsoft.Data.SqlClient;
+using PayWeb.Common;
+using PayWeb.Infrastructure.Core;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Mail;
+using System.Net.Mime;
+using System.Threading.Tasks;
+
+namespace CRM.General
+{
+    public class GeneralService
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public GeneralService(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+        
+        public async Task<EntityResponse> SendEmail(string companyCode, string subject, string htmlBody, List<string> recipients, bool useCompanyLogo , List<Attachment> attachments = null)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+
+                SqlParameter[] parameters = { };
+
+                EmailAccount account = _unitOfWork.Repository<EmailAccount>().GetSP<EmailAccount>("[dbo].[GetEmailAccount]", parameters).FirstOrDefault();
+                
+                MailMessage message = new()
+                {
+                    From = new MailAddress(account.EmailAddress),
+                    Subject = subject
+                };
+
+                foreach (var email in recipients)
+                    message.To.Add(email);
+
+                if (attachments != null)
+                {
+                    foreach (var attachment in attachments)
+                        message.Attachments.Add(attachment);
+                }
+
+                AlternateView htmlView = AlternateView.CreateAlternateViewFromString(
+                    htmlBody,
+                    null,
+                    MediaTypeNames.Text.Html);
+
+                if(useCompanyLogo)
+                {
+                    RoutePath path = _unitOfWork.Repository<RoutePath>().Query().FirstOrDefault(x => x.Name == "Logos");
+
+                    string rutaImagen = $"{path.URL}/{companyCode}.jpg";
+
+                    byte[] imageBytes = null;
+
+                    using var response = await httpClient.GetAsync(rutaImagen);
+
+                    if (response.IsSuccessStatusCode)
+                        imageBytes = await response.Content.ReadAsByteArrayAsync();
+
+                    if (imageBytes != null)
+                    {
+                        LinkedResource logo = new(new MemoryStream(imageBytes), "image/png");
+
+                        logo.ContentId = "LogoEmpresa";
+                        logo.TransferEncoding = TransferEncoding.Base64;
+
+                        htmlView.LinkedResources.Add(logo);
+                    }
+                }
+
+                message.AlternateViews.Add(htmlView);
+                using SmtpClient smtp = new("smtp.office365.com", 587)
+                {
+                    EnableSsl = true,
+                    Credentials = new NetworkCredential(
+                        account.EmailAddress,
+                        account.Password)
+                };
+
+                await smtp.SendMailAsync(message);
+
+                return EntityResponse.CreateOk();
+            }
+            catch (Exception ex)
+            {
+                return EntityResponse.CreateError(ex.Message);
+            }
+        }
+    }
+}

@@ -1,5 +1,5 @@
 ﻿using CRM.Features.Gira.Historical;
-using CRM.GeneralDTOs;
+using CRM.General.GeneralDTOs;
 using CRM.Infrastructure.Core;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Identity;
@@ -45,9 +45,14 @@ namespace CRM.Features.Gira.ExpensesSettings
         {
             try
             {
-                List<ExpenseCategory> types = _unitOfWorkGira.Repository<ExpenseCategory>().Query().Include(x => x.ExpenseType).Where(x => x.CompanyCode == companyCode).ToList();
+                SqlParameter[] parameters =
+                {
+                    new SqlParameter("@companyCode", companyCode)
+                };
 
-                return EntityResponse.CreateOk(types);
+                List<ExpenseCategoryDto> dto = _unitOfWork.Repository<ExpenseCategoryDto>().GetSP<ExpenseCategoryDto>("[Gira].[GetExpenseCategories]", parameters).ToList();
+
+                return EntityResponse.CreateOk(dto);
             }
             catch (Exception ex)
             {
@@ -109,13 +114,13 @@ namespace CRM.Features.Gira.ExpensesSettings
             }
         }
 
-        public async Task<EntityResponse> GetUsers(string companyCode)
+        /*public async Task<EntityResponse> GetUsers(string companyCode)
         {
             try
             {
                 SqlParameter[] parameters = 
                 {
-                    new SqlParameter("@CompanyCode", companyCode)
+                    new SqlParameter("@companyCode", companyCode)
                 };
 
                 List<UserDto> users = _unitOfWork.Repository<UserDto>().GetSP<UserDto>("[Gira].[GetUsers]", parameters).ToList();
@@ -126,7 +131,7 @@ namespace CRM.Features.Gira.ExpensesSettings
             {
                 return EntityResponse.CreateError("Error en GetUsers: " + ex.Message);
             }
-        }
+        }*/
 
         public async Task<EntityResponse> GetEmployees(string companyCode)
         {

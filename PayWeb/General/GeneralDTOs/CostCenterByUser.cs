@@ -1,4 +1,4 @@
-﻿namespace CRM.GeneralDTOs
+﻿namespace CRM.General.GeneralDTOs
 {
     public class CostCenterByUser
     {

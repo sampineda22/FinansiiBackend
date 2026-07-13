@@ -1,4 +1,4 @@
-﻿namespace CRM.DTOs
+﻿namespace CRM.General.GeneralDTOs
 {
     public class StringResponse
     {

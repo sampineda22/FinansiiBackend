@@ -1,4 +1,4 @@
-﻿using CRM.GeneralDTOs;
+﻿using CRM.General.GeneralDTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

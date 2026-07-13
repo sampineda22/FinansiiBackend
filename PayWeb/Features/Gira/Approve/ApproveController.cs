@@ -1,6 +1,5 @@
 ﻿using CRM.Features.Admin.Users;
 using CRM.Features.Gira.Historical;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PayWeb.Common;
@@ -12,7 +11,6 @@ namespace CRM.Features.Gira.Approve
 {
     [Route("[Controller]")]
     [ApiController]
-    [Authorize]
     public class ApproveController : ControllerBase
     {
         private readonly ApproveService _approveService;
@@ -61,13 +59,13 @@ namespace CRM.Features.Gira.Approve
             }
         }
 
-        [HttpPut("Status/{companyCode}/{id}/{personalCode}/{rejectionMotive?}")]
-        public async Task<IActionResult> Status(string companyCode, int id, string personalCode, string rejectionMotive)
+        [HttpPut("Status/{companyCode}/{id}/{personalCode}/{user}/{rejectionMotive?}")]
+        public async Task<IActionResult> Status(string companyCode, int id, string personalCode, string user,string? rejectionMotive)
         {
             try
             {
                 string message = String.IsNullOrEmpty(rejectionMotive) ? "aprobado" : "rechazado";
-                EntityResponse response = await _approveService.UpdateStatus(companyCode, id, rejectionMotive, personalCode);
+                EntityResponse response = await _approveService.UpdateStatus(companyCode, id, rejectionMotive, personalCode, user);
 
                 if (!response.Ok)
                 {

@@ -1,12 +1,12 @@
-﻿using CRM.Features.Gira.ExpensesDetails;
-using CRM.Features.Gira.Historical;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using PayWeb.Common;
 using System;
 using System.Threading.Tasks;
 
 namespace CRM.Features.Gira.Vendors
 {
+    [Route("[Controller]")]
+    [ApiController]
     public class VendorController : ControllerBase
     {
         private readonly VendorService _vendorService;
@@ -16,12 +16,12 @@ namespace CRM.Features.Gira.Vendors
             _vendorService = vendorService;
         }
 
-        [HttpPost("Vendor")]
-        public async Task<IActionResult> Vendor()
+        [HttpPost("EmailNewVendor/{companyCode}")]
+        public async Task<IActionResult> EmailNewVendor(string companyCode, [FromBody] VendorRequest vendorRequest)
         {
             try
             {
-                EntityResponse response = await _vendorService.SendEmailNewVendor("IMHN");
+                EntityResponse response = await _vendorService.SendEmailNewVendor(companyCode, vendorRequest);
 
                 if (!response.Ok)
                 {

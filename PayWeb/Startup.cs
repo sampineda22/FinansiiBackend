@@ -34,6 +34,7 @@ using System.Text;
 using CRM.Features.Gira.PendingAX;
 using CRM.Features.Gira.ExpensesDetails;
 using CRM.Features.Gira.Vendors;
+using CRM.General;
 
 namespace PayWeb
 {
@@ -94,7 +95,7 @@ namespace PayWeb
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "JWT Auth Demo", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Finansii API", Version = "v1" });
               
                 var securityScheme = new OpenApiSecurityScheme
                 {
@@ -157,7 +158,7 @@ namespace PayWeb
             });
 
             services.Configure<AXConnectionSettings>(Configuration.GetSection("AXConnection"));
-            services.Configure<EVAConnectionSettings>(Configuration.GetSection("EVAConnection"));
+            services.Configure<ProxyConnectionSettings>(Configuration.GetSection("ProxyConnection"));
             services.AddScoped<AXEndpoint>();
 
             services.AddScoped<UserAppService>();
@@ -181,6 +182,7 @@ namespace PayWeb
             services.AddScoped<PendingAXService>();
             services.AddScoped<ExpenseDetailService>();
             services.AddScoped<VendorService>();
+            services.AddScoped<GeneralService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

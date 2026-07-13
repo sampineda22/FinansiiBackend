@@ -1,7 +1,10 @@
-﻿using CRM.Features.Gira.Historical;
-using Microsoft.AspNetCore.Authorization;
+﻿using CRM.Features.Admin.Users;
+using CRM.Features.Gira.Approve;
+using CRM.Features.Gira.Historical;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Client;
 using PayWeb.Common;
+using PayWeb.Infrastructure.Core;
 using System;
 using System.Threading.Tasks;
 
@@ -13,30 +16,46 @@ namespace CRM.Features.Gira.ExpensesDetails
     public class ExpenseDetailController : ControllerBase
     {
         private readonly ExpenseDetailService _expenseDetailService;
+        private readonly ApproveService _approveService;
 
-        public ExpenseDetailController(ExpenseDetailService expenseDetailService)
+        public ExpenseDetailController(ExpenseDetailService expenseDetailService, ApproveService approveService)
         {
             _expenseDetailService = expenseDetailService;
+            _approveService = approveService;
         }
 
-        [HttpPost("ExpenseDetail")]
-        public async Task<IActionResult> ExpenseDetail([FromBody] ExpenseDetail detail)
+        [HttpPost("ExpenseDetail/{user}")]
+        public async Task<IActionResult> ExpenseDetail(string user, [FromBody] ExpenseDetail detail)
         {
             try
             {
-                EntityResponse response = await _expenseDetailService.PostExpenseDetail(detail);
+                EntityResponse detailResponse = await _expenseDetailService.PostExpenseDetail(detail);
 
-                if (!response.Ok)
+                if (!detailResponse.Ok)
                 {
-                    if (response.Mensaje.Contains("misma factura"))
+                    if (detailResponse.Mensaje.Contains("misma factura"))
                     {
-                        return Conflict(response);
+                        return Conflict(detailResponse);
                     }
 
-                    return BadRequest(response);
+                    return BadRequest(detailResponse);
                 }
 
-                return Ok(response);
+                bool isAutoApprove = _expenseDetailService.IsAutoApprovePosition(detail.CompanyCode, detail.PersonalCode);
+
+                if (isAutoApprove)
+                {
+                    if (detailResponse is EntityResponse<ExpenseDetail> genericResponse)
+                    {
+                        EntityResponse response = await _approveService.UpdateStatus(detail.CompanyCode, genericResponse.Data.Id, null, detail.PersonalCode, user);
+
+                        if (!response.Ok)
+                        {
+                            return BadRequest(response);
+                        }
+                    }
+                }
+                return Ok(detailResponse);
             }
             catch (Exception ex)
             {
@@ -44,7 +63,6 @@ namespace CRM.Features.Gira.ExpensesDetails
             }
         }
 
-        [Authorize]
         [HttpGet("Path/{projectName}")]
         public async Task<IActionResult> Path(string projectName)
         {

@@ -20,7 +20,7 @@ namespace CRM.Infrastructure.Maps.Gira
             builder.Property(e => e.SeriesNum).HasMaxLength(20);
             builder.Property(e => e.InvoiceAmount).IsRequired();
             builder.Property(e => e.InvoiceDate).HasColumnType("datetime").IsRequired().HasDefaultValueSql("'1900-01-01'");
-            builder.Property(e => e.ImagePath).HasMaxLength(80);
+            builder.Property(e => e.ImagePath).HasMaxLength(180);
             builder.Property(e => e.CreationDate).HasColumnType("datetime").IsRequired().HasDefaultValueSql("'1900-01-01'");
             builder.Property(e => e.PersonalCodeAdmin).HasMaxLength(20);
             builder.Property(e => e.RejectionMotive).HasMaxLength(250);

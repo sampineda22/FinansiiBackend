@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <GenerateWebConfigFile>false</GenerateWebConfigFile>
+    <IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>
     <UserSecretsId>bc689492-858e-4e6a-bd01-58ac714d2328</UserSecretsId>
   </PropertyGroup>
 
@@ -46,6 +48,12 @@
 
   <ItemGroup>
     <Folder Include="Properties\DataSources\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="web.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>

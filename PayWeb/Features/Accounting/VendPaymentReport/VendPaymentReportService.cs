@@ -407,20 +407,23 @@ namespace CRM.Features.Accounting.VendPaymentReport
         {
             try
             {
-                SqlParameter[] parameters =
+                User user = _unitOfWork.Repository<User>().Query().Where(x => x.UserId == userId).FirstOrDefault();
+
+                if (user == null)
                 {
-                  new SqlParameter("@companyCode",companyCode)
-                };
-
-                List<UserDto> users = _unitOfWork.Repository<UserDto>().GetSP<UserDto>("[Finansii].[GetUsersInfo]", parameters).ToList();
-                UserDto user = users.Find(x => x.UserId == userId);
-
-                if (user == null) {
                     return EntityResponse.CreateError("No se pudo obtener la información del usuario");
                 }
 
-                return EntityResponse.CreateOk(user);
+                SqlParameter[] parameters =
+                {
+                  new SqlParameter("@companyCode",companyCode),
+                  new SqlParameter("@personalCode",user.PersonalCode)
+                };
 
+                List<UserDto> users = _unitOfWork.Repository<UserDto>().GetSP<UserDto>("[Finansii].[GetUsersInfo]", parameters).ToList();
+                UserDto userDto = users.FirstOrDefault();                
+
+                return EntityResponse.CreateOk(userDto);
             }
             catch (Exception ex)
             {
