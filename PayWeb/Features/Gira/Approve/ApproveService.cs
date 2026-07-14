@@ -185,7 +185,6 @@ namespace CRM.Features.Gira.Approve
 
                 }else if (result.Contains("Cai"))
                 {
-                    var resp = Newtonsoft.Json.JsonConvert.DeserializeObject<string>(result);
                     EntityResponse res = await UpdateCAI(detail, result);
 
                     if (!res.Ok)
@@ -193,7 +192,7 @@ namespace CRM.Features.Gira.Approve
                         return EntityResponse.CreateError(res.Mensaje);
                     }
 
-                    return EntityResponse.CreateError($"{resp}. Se realizó la solicitud de actualización del CAI a los correspondientes. Favor esperar a que se actualicé");
+                    return EntityResponse.CreateError($"{result}. Se realizó la solicitud de actualización del CAI a los correspondientes. Favor esperar a que se actualice.");
                 }
                 else if (result.Contains("LD"))
                 {
