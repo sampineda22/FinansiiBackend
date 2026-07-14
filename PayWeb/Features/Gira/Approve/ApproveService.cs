@@ -87,11 +87,11 @@ namespace CRM.Features.Gira.Approve
                     return EntityResponse.CreateError($"No se encontró una cuenta de contrapartida asignada a la categoria {detail.ExpenseCategory.Name}");
                 }
 
+                List<Status> statuses = _unitOfWorkGira.Repository<Status>().Query().ToList();
+
                 if (String.IsNullOrEmpty(rejectionMotive))
                 {
-                    List<Status> statuses = _unitOfWorkGira.Repository<Status>().Query().ToList();
-
-                    detail.StatusId = statuses.Find(x => x.Code == ExpensesStatus.Status.APROBADO.ToString()).Id;
+                    //detail.StatusId = statuses.Find(x => x.Code == ExpensesStatus.Status.APROBADO.ToString()).Id;
                     detail.PersonalCodeAdmin = personalCode;
                     detail.AXMessage = null;
 
@@ -117,18 +117,21 @@ namespace CRM.Features.Gira.Approve
                 }
                 else if (rejectionMotive != "")
                 {
-                    Status status = _unitOfWorkGira.Repository<Status>().Query().Where(x => x.Code == ExpensesStatus.Status.RECHAZADO.ToString()).FirstOrDefault();
-
-                    detail.StatusId = status.Id;
+                    detail.StatusId = statuses.Find(x => x.Code == ExpensesStatus.Status.RECHAZADO.ToString()).Id;
                     detail.PersonalCodeAdmin = personalCode;
                     detail.RejectionMotive = rejectionMotive;
                 }
+
+                if (String.IsNullOrEmpty(errorMessage))
+                    detail.StatusId = statuses.Find(x => x.Code == ExpensesStatus.Status.APROBADO.ToString()).Id;
 
                 _unitOfWorkGira.Repository<ExpenseDetail>().Update(detail);
                 await _unitOfWorkGira.SaveChangesAsync();
 
                 if(!String.IsNullOrEmpty(errorMessage))
+                {
                     return EntityResponse.CreateError(errorMessage);
+                }
 
                 return EntityResponse.CreateOk(detail);
             }
