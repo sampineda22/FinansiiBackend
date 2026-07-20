@@ -363,7 +363,7 @@ namespace CRM.Features.Accounting.VendPaymentReport
 
                 foreach (var tableRow in table.DataRange.Rows())
                 {
-                    worksheet.Row(tableRow.RowNumber()).Height = 30;
+                    worksheet.Row(tableRow.RowNumber()).Height = 25;
                 }
 
                 workbook.SaveAs(memoryStream);

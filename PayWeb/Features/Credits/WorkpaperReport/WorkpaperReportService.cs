@@ -201,7 +201,19 @@ namespace CRM.Features.Credits.ReceiptBreakdownReport
                             newAddress = new ExcelAddressBase(table.Address.Start.Row, table.Address.Start.Column, summaryTableRow, table.Address.End.Column);
                             typeof(ExcelTable).GetProperty("Address").SetValue(table, newAddress);
 
-                             package.Save();
+                            /*Commented on 2026-jun.-23 by spineda - Begin*/
+                            targetWorksheet.Column(2).AutoFit();
+                            targetWorksheet.Column(4).AutoFit();
+                            targetWorksheet.Column(5).AutoFit();
+                            var col = targetWorksheet.Column(10);
+                            col.AutoFit();
+                            col.Width += 2;
+                            var col2 = targetWorksheet.Column(11);
+                            col2.AutoFit();
+                            col2.Width += 2;
+                            /*Commented on 2026-jun.-23 by spineda - End*/
+
+                            package.Save();
                         }
 
                         ConvertExcelToPdf(excelPath, pdfFilePath);

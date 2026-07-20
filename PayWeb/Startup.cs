@@ -193,7 +193,9 @@ namespace PayWeb
                 app.UseDeveloperExceptionPage();
             }
 
+            /*Commented on 2026-jun.-23 by spineda - Begin
             app.UseCors(CorsOrigins);
+            Commented on 2026-jun.-23 by spineda - End*/
 
             app.UseHttpsRedirection();
 
@@ -205,7 +207,7 @@ namespace PayWeb
             });
 
             app.UseRouting();
-            //app.UseCors(CorsOrigins);
+            app.UseCors(CorsOrigins);
 
             app.UseAuthentication();
             app.UseAuthorization();

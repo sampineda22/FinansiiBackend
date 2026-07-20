@@ -199,6 +199,16 @@ namespace CRM.Features.Credits.ReceiptBreakdown
 
                             targetWorksheet.Cells[$"C{advanceTableRow + spaceBetweenSignature}"].Value = journalLines.Count <= 0 ? "" : string.Join(", ", journalLines.Select(x => x.ModifiedBy).Distinct());
 
+                            /*Commented on 2026-jun.-23 by spineda - Begin*/
+                            targetWorksheet.Column(2).AutoFit();
+                            var col = targetWorksheet.Column(12);
+                            col.AutoFit();
+                            col.Width += 2;
+                            col = targetWorksheet.Column(13);
+                            col.AutoFit();
+                            col.Width += 2;
+                            /*Commented on 2026-jun.-23 by spineda - End*/
+
                             package.Save();
                         }
                         
