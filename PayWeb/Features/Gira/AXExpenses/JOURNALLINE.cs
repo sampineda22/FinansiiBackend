@@ -14,7 +14,7 @@
         public string JOURNALNAME { get; set; }
         public string OFFSETACCOUNT { get; set; }
         public string? SERIE { get; set; }
-        public string TAXGROUPEXENTO { get; set; }
-        public string TAXITEMGROUPEXENTO { get; set; }
+        public string? TAXGROUPEXENTO { get; set; }
+        public string? TAXITEMGROUPEXENTO { get; set; }
     }
 }

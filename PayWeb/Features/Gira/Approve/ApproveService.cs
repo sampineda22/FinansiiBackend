@@ -21,6 +21,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Net.Mail;
+using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -91,7 +92,6 @@ namespace CRM.Features.Gira.Approve
 
                 if (String.IsNullOrEmpty(rejectionMotive))
                 {
-                    //detail.StatusId = statuses.Find(x => x.Code == ExpensesStatus.Status.APROBADO.ToString()).Id;
                     detail.PersonalCodeAdmin = personalCode;
                     detail.AXMessage = null;
 
@@ -99,7 +99,6 @@ namespace CRM.Features.Gira.Approve
 
                     if (!response.Ok)
                     {
-                        //detail.StatusId = !response.Mensaje.Contains("LD-") ? statuses.Find(x => x.Code == ExpensesStatus.Status.PENDIENTEAX.ToString()).Id : detail.StatusId;
                         detail.AXMessage = response.Mensaje;
                         errorMessage = $"{response.Mensaje}";
                     }
@@ -204,12 +203,30 @@ namespace CRM.Features.Gira.Approve
                 else if (result.Contains("OK"))
                 {
                     return EntityResponse.CreateOk("Se creó el diario pero no se pudo almacenar el número de diario.");
+
+                } else if (result.Contains("\"errors\""))
+                {
+                    var json = JsonDocument.Parse(result);
+
+                    if (json.RootElement.TryGetProperty("errors", out JsonElement errors))
+                    {
+                        string jsonError = "";
+                        foreach (var error in errors.EnumerateObject())
+                        {
+                            string campo = error.Name;
+                            string mensaje = error.Value[0].GetString();
+
+                            jsonError = $"{campo}: {mensaje}";
+                        }
+                        return EntityResponse.CreateError(jsonError);
+                    }
                 }
                 else
                 {
-                    return EntityResponse.CreateError($"{response.Content}");
+                    return EntityResponse.CreateError(result);
                 }
-                    return EntityResponse.CreateOk(detail);
+                
+                return EntityResponse.CreateOk(detail);
             }
             catch (Exception ex)
             {
@@ -223,7 +240,7 @@ namespace CRM.Features.Gira.Approve
             {
                 SqlParameter[] parameters = { };
                 byte[] imageBytes = null;
-                string html = "";
+                string html = "", htmlGroup = "", htmlSerie = "";
                 var attachments = new List<Attachment>();
 
                 parameters = new SqlParameter[]
@@ -247,64 +264,158 @@ namespace CRM.Features.Gira.Approve
                 };
 
                 StringResponse emails = _unitOfWork.Repository<StringResponse>().GetSP<StringResponse>("[Gira].[GetEmailsForCAI]", parameters).FirstOrDefault();
+                
+                if(detail.CompanyCode != "IMCR")
+                {
+                    htmlGroup = $@"
+                    <tr>
+                    <td><b>Grupo</b></td>
+                    <td>Comercio Nacional</td>
+                    </tr>";
 
-                if(detail.CompanyCode == "IMGT")
+                }else if(detail.CompanyCode == "IMGT")
                 {
-                    html = $@"
-                    <html>
-                        <body style='text-align:center;'>
-                            <img src='cid:LogoEmpresa' style='width:300px; height:100px;' />
-                            <h2>Actualización de Proveedor</h2>
-                            <p><b>Código de Proveedor: </b>{detail.VendAccount}</p>
-                            <p><b>No. de Seria: </b>{detail.SeriesNum}</p>
-                            <p><b>No. Factura: </b>{detail.InvoiceId}</p>
-                            <p><b>Grupo: </b>Comercio Nacional</p>
-                            <p><b>Divisa: </b>{data.Currency}</p>
-                            <p><b>Fecha de Documento: </b>{detail.InvoiceDate}</p>
-                            <p><b>Descripción: </b>{response}</p>
-                            <p><b>Solicitante: </b>{data.Name}</p>
-                            <p><b>Correo de Solicitante: </b>{data.Email}</p>
-                        </body>
-                    </html>";
+                    htmlSerie = $@"
+                    <tr>
+                    <td><b>No. Serie</b></td>
+                    <td>{detail.SeriesNum}</td>
+                    </tr>";
                 }
-                else
-                {
-                    html = $@"
+
+                html = $@"
+                    <!DOCTYPE html>
                     <html>
-                        <body style='text-align:center;'>
-                            <img src='cid:LogoEmpresa' style='width:300px; height:100px;' />
-                            <h2>Actualización de Proveedor</h2>
-                            <p><b>Código de Proveedor: </b>{detail.VendAccount}</p>
-                            <p><b>No. Factura: </b>{detail.InvoiceId}</p>
-                            <p><b>Grupo: </b>Comercio Nacional</p>
-                            <p><b>Divisa: </b>{data.Currency}</p>
-                            <p><b>Fecha de Documento: </b>{detail.InvoiceDate}</p>
-                            <p><b>Descripción: </b>{response}</p>
-                            <p><b>Solicitante: </b>{data.Name}</p>
-                            <p><b>Correo de Solicitante: </b>{data.Email}</p>
-                        </body>
+                    <head>
+                    <meta charset='UTF-8'>
+                    </head>
+
+                    <body style='margin:0;padding:30px;background:#f4f6f9;font-family:Segoe UI,Arial,sans-serif;'>
+
+                    <table width='100%' cellspacing='0' cellpadding='0'>
+                    <tr>
+                    <td align='center'>
+
+                    <table width='650' cellspacing='0' cellpadding='0'
+                    style='background:#ffffff;border-radius:8px;border:1px solid #dddddd;'>
+
+                    <tr>
+                    <td align='center' style='padding:30px;'>
+
+                    <img src='cid:LogoEmpresa'
+                         style='max-width:220px;height:auto;' />
+
+                    </td>
+                    </tr>
+
+                    <tr>
+                    <td style='padding:35px;'>
+
+                    <h2 style='margin-top:0;color:#003366;'>
+                    Actualización de Proveedor
+                    </h2>
+
+                    <table width='100%' cellpadding='8' cellspacing='0'
+                    style='border-collapse:collapse;font-size:14px;'>
+
+                    <tr style='background:#f7f7f7'>
+                    <td width='35%'><b>Código de proveedor</b></td>
+                    <td>{detail.VendAccount}</td>
+                    </tr>
+
+                    {htmlSerie}
+
+                    <tr style='background:#f7f7f7'>
+                    <td><b>No. Factura</b></td>
+                    <td>{detail.InvoiceId}</td>
+                    </tr>
+
+                    {htmlGroup}
+
+                    <tr style='background:#f7f7f7'>
+                    <td><b>Divisa</b></td>
+                    <td>{data.Currency}</td>
+                    </tr>
+
+                    <tr>
+                    <td><b>Fecha Documento</b></td>
+                    <td>{detail.InvoiceDate:dd/MM/yyyy}</td>
+                    </tr>
+
+                    <tr style='background:#fff3cd'>
+                    <td><b>Descripción</b></td>
+                    <td style='color:#b02a37;font-weight:bold;'>
+                    {response}
+                    </td>
+                    </tr>
+
+                    <tr>
+                    <td><b>Solicitante</b></td>
+                    <td>{data.Name}</td>
+                    </tr>
+
+                    <tr style='background:#f7f7f7'>
+                    <td><b>Correo</b></td>
+                    <td>{data.Email}</td>
+                    </tr>
+
+                    </table>
+
+                    </td>
+                    </tr>
+
+                    <tr>
+                    <td align='center'
+                    style='background:#003366;color:white;padding:15px;font-size:12px;'>
+
+                    Este correo fue generado automáticamente.<br/>
+                    Favor no responder.
+
+                    </td>
+                    </tr>
+
+                    </table>
+
+                    </td>
+                    </tr>
+                    </table>
+
+                    </body>
                     </html>";
-                }
 
                 if (!string.IsNullOrWhiteSpace(detail.ImagePath))
                 {
-                    using (WebClient webClient = new WebClient())
+                    using HttpClient httpClient = new();
+                    using HttpResponseMessage responseImage = await httpClient.GetAsync(detail.ImagePath);
+
+                    responseImage.EnsureSuccessStatusCode();
+
+                    imageBytes = await responseImage.Content.ReadAsByteArrayAsync();
+
+                    string mediaType = responseImage.Content.Headers.ContentType?.MediaType
+                                       ?? "application/octet-stream";
+
+                    string extension = mediaType switch
                     {
-                        imageBytes = webClient.DownloadData(detail.ImagePath);
+                        "image/jpeg" => ".jpg",
+                        "image/png" => ".png",
+                        "image/gif" => ".gif",
+                        "image/bmp" => ".bmp",
+                        _ => Path.GetExtension(detail.ImagePath)
+                    };
 
-                        var stream = new MemoryStream(imageBytes);
+                    MemoryStream stream = new(imageBytes);
+                    stream.Position = 0;
 
-                        attachments.Add(new Attachment(stream, $"Actualización CAI - {detail.VendAccount}")
-                        {
-                            ContentType =
-                            {
-                                MediaType = "image/jpeg"
-                            }
-                        });
-                    }
+                    Attachment attachment = new(
+                        stream,
+                        $"ActualizacionCAI_{detail.VendAccount}{extension}",
+                        mediaType);
+
+                    attachment.TransferEncoding = TransferEncoding.Base64;
+
+                    attachments.Add(attachment);
                 }
 
-                emails.Value = "spineda@intermoda.com.hn,gmeza@intermoda.com.hn";
                 return await _generalService.SendEmail(detail.CompanyCode,
                                                        "Solicitud de Actualización de CAI",
                                                        html,

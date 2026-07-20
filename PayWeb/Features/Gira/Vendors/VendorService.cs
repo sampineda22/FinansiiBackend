@@ -56,7 +56,6 @@ namespace CRM.Features.Gira.Vendors
                 };
                 StringResponse emails = _unitOfWork.Repository<StringResponse>().GetSP<StringResponse>("[Gira].[GetEmailsForCAI]", parameters).FirstOrDefault();
 
-                emails.Value = "spineda@intermoda.com.hn,gmeza@intermoda.com.hn";
                 string html = $@"
                 <html>
                     <body style='text-align:center;'>

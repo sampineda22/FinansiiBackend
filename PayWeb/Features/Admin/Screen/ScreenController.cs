@@ -1,5 +1,4 @@
-﻿using CRM.Features.Accounting.BankStatement;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PayWeb.Common;
 using System;
