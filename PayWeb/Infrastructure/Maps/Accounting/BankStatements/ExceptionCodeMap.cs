@@ -9,7 +9,7 @@ namespace CRM.Infrastructure.Maps.Accounting.BankStatement
         public void Configure(EntityTypeBuilder<ExceptionCode> builder)
         {
             builder.ToTable("ExceptionCodes", "Finansii");
-            builder.HasKey(e => new { e.AccountId, e.Code });
+            builder.HasKey(e => new { e.AccountId, e.Code, e.TransactionType });
             builder.Property(e => e.Code).HasMaxLength(25).IsRequired();
             builder.Property(e => e.AccountId).HasMaxLength(20).IsRequired();
             builder.Property(e => e.CompanyCode).HasMaxLength(8).IsRequired();

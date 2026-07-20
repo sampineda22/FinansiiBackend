@@ -3,6 +3,7 @@ using CRM.Features.Accounting.BankStatementServiceAX;
 using PayWeb.Common;
 using PayWeb.Infrastructure.Core;
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -56,7 +57,7 @@ namespace CRM.Features.Accounting.AccountingConfiguration
 
             try
             {
-                ExceptionCode existingCode = _unitOfWork.Repository<ExceptionCode>().Query().Where(x => x.CompanyCode == code.CompanyCode && x.AccountId == code.AccountId && x.Code == code.Code).FirstOrDefault();
+                ExceptionCode existingCode = _unitOfWork.Repository<ExceptionCode>().Query().Where(x => x.CompanyCode == code.CompanyCode && x.AccountId == code.AccountId && x.Code == code.Code && x.TransactionType == code.TransactionType).FirstOrDefault();
 
                 if (existingCode != null)
                 {
