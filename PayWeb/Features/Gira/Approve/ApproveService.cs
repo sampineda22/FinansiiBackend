@@ -121,7 +121,7 @@ namespace CRM.Features.Gira.Approve
                     detail.RejectionMotive = rejectionMotive;
                 }
 
-                if (String.IsNullOrEmpty(errorMessage))
+                if (String.IsNullOrEmpty(errorMessage) && String.IsNullOrEmpty(rejectionMotive))
                     detail.StatusId = statuses.Find(x => x.Code == ExpensesStatus.Status.APROBADO.ToString()).Id;
 
                 _unitOfWorkGira.Repository<ExpenseDetail>().Update(detail);
