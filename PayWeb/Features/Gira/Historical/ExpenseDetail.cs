@@ -17,6 +17,7 @@ namespace CRM.Features.Gira.Historical
         public string? SeriesNum { get; set; }
         public double? ExemptAmount { get; set; }
         public double? GravadoAmount { get; set; }
+        public double? TaxAmount { get; set; }
         public double InvoiceAmount { get; set; }
         public DateTime InvoiceDate { get; set; }
         public string? ImagePath { get; set; }
@@ -49,6 +50,7 @@ namespace CRM.Features.Gira.Historical
         public string? SeriesNum { get; set; }
         public double? ExemptAmount { get; set; }
         public double? GravadoAmount { get; set; }
+        public double? TaxAmount { get; set; }
         public double InvoiceAmount { get; set; }
         public DateTime InvoiceDate { get; set; }
         public string? ImagePath { get; set; }

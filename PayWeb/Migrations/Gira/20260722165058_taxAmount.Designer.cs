@@ -4,14 +4,16 @@ using CRM.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CRM.Migrations.Gira
 {
     [DbContext(typeof(GiraContext))]
-    partial class GiraContextModelSnapshot : ModelSnapshot
+    [Migration("20260722165058_taxAmount")]
+    partial class taxAmount
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
