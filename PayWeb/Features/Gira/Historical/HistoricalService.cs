@@ -26,7 +26,7 @@ namespace CRM.Features.Gira.Historical
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<EntityResponse> GetHistoricalDetails(string companyCode, string? personalCode, int expenseType, DateTime startDate, DateTime endDate/*, bool filterByAdmin*/)
+        public async Task<EntityResponse> GetHistoricalDetails(string companyCode, string? personalCode, int expenseType, DateTime startDate, DateTime endDate, string? status = null)
         {
             try
             {
@@ -36,8 +36,8 @@ namespace CRM.Features.Gira.Historical
                     new SqlParameter("@startDate", startDate),
                     new SqlParameter("@endDate", endDate),
                     new SqlParameter("@personalCode", (object?)personalCode ?? DBNull.Value),
-                    new SqlParameter("@idExpenseType", expenseType)/*,
-                    new SqlParameter("@filterByAdmin", filterByAdmin)*/
+                    new SqlParameter("@idExpenseType", expenseType),
+                    new SqlParameter("@status", (object?)status ?? DBNull.Value)
                 };
 
                 List<ExpenseDetailDto> details = _unitOfWork.Repository<ExpenseDetailDto>().GetSP<ExpenseDetailDto>("[Gira].[GetExpensesDetailsByFilters]", parameters).ToList();
@@ -50,11 +50,31 @@ namespace CRM.Features.Gira.Historical
             }
         }
 
+        public async Task<EntityResponse> GetHistoricalDetailById(int id)
+        {
+            try
+            {
+                SqlParameter[] parameters =
+                {
+                    new SqlParameter("@id", id)
+                };
+
+                ExpenseDetailDto detail = _unitOfWork.Repository<ExpenseDetailDto>().GetSP<ExpenseDetailDto>("[Gira].[GetExpensesDetailsById]", parameters).FirstOrDefault();
+
+
+                return EntityResponse.CreateOk(detail);
+            }
+            catch (Exception ex)
+            {
+                return EntityResponse.CreateError("Error en GetHistoricalDetailById: " + ex.Message);
+            }
+        }
+
         public EntityResponse DownloadExcel(string companyCode, string salesAgent, int expenseType, DateTime startDate, DateTime endDate)
         {
             try
             {
-                List<ExpenseDetail> expenseDetails = new();
+                List<ExpenseDetailDto> expenseDetails = new();
                 using var workbook = new XLWorkbook();
                 SqlParameter[] parameters = { };
                 IXLRanges dataRanges;
@@ -75,8 +95,8 @@ namespace CRM.Features.Gira.Historical
 
                 List<SalesAgent> salesAgents = _unitOfWork.Repository<SalesAgent>().GetSP<SalesAgent>("[Finansii].[GetSalesAgents]", parameters).ToList();
 
-                EntityResponse response = this.GetHistoricalDetails(companyCode, salesAgent, expenseType, startDate, endDate/*, false*/).Result;
-                if (response is EntityResponse<List<ExpenseDetail>> genericResponse)
+                EntityResponse response = this.GetHistoricalDetails(companyCode, salesAgent, expenseType, startDate, endDate, "A").Result;
+                if (response is EntityResponse<List<ExpenseDetailDto>> genericResponse)
                 {
                     expenseDetails = genericResponse.Data;
                     expenseDetails = expenseDetails.FindAll(x => x.StatusId == 2);
@@ -190,12 +210,12 @@ namespace CRM.Features.Gira.Historical
             }
         }
 
-        public static List<ExpenseSummaryRow> BuildSummary(List<ExpenseDetail> expenseDetails)
+        public static List<ExpenseSummaryRow> BuildSummary(List<ExpenseDetailDto> expenseDetails)
         {
             var result = expenseDetails
-                .Where(x => x.ExpenseCategory != null)
+                .Where(x => x.ExpenseCategoryId != 0)
                 .Where(x => x.InvoiceDate.DayOfWeek != DayOfWeek.Sunday) // excluir domingo
-                .GroupBy(x => x.ExpenseCategory.Name)
+                .GroupBy(x => x.ExpenseCategoryName)
                 .Select(g => new ExpenseSummaryRow
                 {
                     Description = g.Key,

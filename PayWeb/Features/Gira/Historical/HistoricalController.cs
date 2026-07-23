@@ -39,25 +39,25 @@ namespace CRM.Features.Gira.Historical
             }
         }
 
-        //[HttpGet("HistoricalDetailsRevision/{companyCode}/{expenseType}/{startDate}/{endDate}")]
-        //public async Task<IActionResult> HistoricalDetailsRevision(string companyCode, int expenseType, DateTime startDate, DateTime endDate)
-        //{
-        //    try
-        //    {
-        //        EntityResponse response = await _historicalService.GetHistoricalDetails(companyCode, null, expenseType, startDate, endDate/*, false*/);
-        //
-        //        if (!response.Ok)
-        //        {
-        //            return BadRequest(response);
-        //        }
-        //        return Ok(response);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest("Error en método get HistoricalDetails: " + ex.Message);
-        //    }
-        //}
-        
+        [HttpGet("HistoricalDetailById/{id}")]
+        public async Task<IActionResult> HistoricalDetailById(int id)
+        {
+            try
+            {
+                EntityResponse response = await _historicalService.GetHistoricalDetailById(id);
+
+                if (!response.Ok)
+                {
+                    return BadRequest(response);
+                }
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Error en método get HistoricalDetailById: " + ex.Message);
+            }
+        }
+
         [Authorize]
         [HttpGet("DownloadExcel/{companyCode}/{salesAgent}/{expenseType}/{startDate}/{endDate}")]
         public IActionResult DownloadExcel(string companyCode, string salesAgent, int expenseType, DateTime startDate, DateTime endDate)

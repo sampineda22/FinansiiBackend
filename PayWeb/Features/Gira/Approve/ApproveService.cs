@@ -76,6 +76,7 @@ namespace CRM.Features.Gira.Approve
                                               .Where(x => x.CompanyCode == companyCode
                                                        && x.Id == id).FirstOrDefault();
 
+                
                 if (detail.InUse)
                 {
                     return EntityResponse.CreateError("El detalle del gasto esta en uso. Favor esperar a que se deje de utilizar para poder aprobar/rechazar.");
