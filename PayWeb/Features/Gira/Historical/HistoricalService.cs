@@ -199,7 +199,7 @@ namespace CRM.Features.Gira.Historical
                 workbook.SaveAs(stream);
                 var content = stream.ToArray();
 
-                var fileName = $"Reporte de {type.Name} del {start} al {end}";
+                var fileName = $"Reporte de {type.Name} del {start.Replace(".", "")} al {end.Replace(".", "")}";
                 var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
                 return EntityResponse.CreateOk((content, contentType, fileName));
