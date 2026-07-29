@@ -76,7 +76,7 @@ namespace CRM.Features.Gira.ExpensesDetails
                     };
 
                     CostCenterByUser userInfo = _unitOfWork.Repository<CostCenterByUser>().GetSP<CostCenterByUser>("[Gira].[GetCostCenterDtosByUser]", parameters).FirstOrDefault();
-                    sequence = _unitOfWorkGira.Repository<InvoiceSequence>().Query().Where(x => x.CompanyCode == detail.CompanyCode && x.Initials == userInfo.BusinessUnit).FirstOrDefault();
+                    sequence = _unitOfWorkGira.Repository<InvoiceSequence>().Query().Where(x => x.CompanyCode == detail.CompanyCode && x.Initials == "G" + userInfo.BusinessUnit).FirstOrDefault();
 
                     if(sequence == null)
                     {
