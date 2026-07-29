@@ -6,7 +6,8 @@
         {
             Desayuno = 1,
             Almuerzo = 2,
-            Cena = 3
+            Cena = 3,
+            Todos = 4
         }
     }
 }

@@ -57,19 +57,99 @@ namespace CRM.Features.Gira.Vendors
                 StringResponse emails = _unitOfWork.Repository<StringResponse>().GetSP<StringResponse>("[Gira].[GetEmailsForCAI]", parameters).FirstOrDefault();
 
                 string html = $@"
-                <html>
-                    <body style='text-align:center;'>
-                        <img src='cid:LogoEmpresa' style='width:300px; height:100px;' />
-                        <h2>Solicitud de Proveedor: {vendorRequest.VendorName}</h2>
-                        <p><b>{company.DocumentoFiscal}: </b>{vendorRequest.RTN}</p>
-                        <p><b>Grupo: </b>Comercio Nacional</p>
-                        <p><b>Divisa: </b>{user.Currency}</p>
-                        <p><b>Solicitante: </b>{user.Name}</p>
-                        <p><b>Correo de Solicitante: </b>{user.Email}</p>
-                        <p><b>Detalles: </b>{vendorRequest.Description}</p>
-                        <!--<p><b>Nombre de Proveedor: </b>{vendorRequest.VendorName}</p>-->
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset='UTF-8'>
+                    </head>
+
+                    <body style='margin:0;padding:30px;background:#f4f6f9;font-family:Segoe UI,Arial,sans-serif;'>
+
+                    <table width='100%' cellspacing='0' cellpadding='0'>
+                    <tr>
+                    <td align='center'>
+
+                    <table width='650' cellspacing='0' cellpadding='0'
+                    style='background:#ffffff;border-radius:8px;border:1px solid #dddddd;'>
+
+                    <tr>
+                    <td align='center' style='padding:30px;'>
+
+                    <img src='cid:LogoEmpresa'
+                         style='max-width:220px;height:auto;' />
+
+                    </td>
+                    </tr>
+
+                    <tr>
+                    <td style='padding:35px;'>
+
+                    <h2 style='margin-top:0;color:#003366;'>
+                    Solicitud de Creación de Proveedor
+                    </h2>
+
+                    <table width='100%' cellpadding='8' cellspacing='0'
+                    style='border-collapse:collapse;font-size:14px;'>
+
+                    <tr style='background:#f7f7f7'>
+                    <td width='35%'><b>Nombre del proveedor</b></td>
+                    <td>{vendorRequest.VendorName}</td>
+                    </tr>
+
+                    <tr>
+                    <td><b>{company.DocumentoFiscal}</b></td>
+                    <td>{vendorRequest.RTN}</td>
+                    </tr>
+
+                    <tr style='background:#f7f7f7'>
+                    <td><b>Grupo</b></td>
+                    <td>Comercio Nacional</td>
+                    </tr>
+
+                    <tr>
+                    <td><b>Divisa</b></td>
+                    <td>{user.Currency}</td>
+                    </tr>
+
+                    <tr style='background:#f7f7f7'>
+                    <td><b>Solicitante</b></td>
+                    <td>{user.Name}</td>
+                    </tr>
+
+                    <tr>
+                    <td><b>Correo del solicitante</b></td>
+                    <td>{user.Email}</td>
+                    </tr>
+
+                    <tr style='background:#fff3cd'>
+                    <td><b>Descripción</b></td>
+                    <td style='color:#003366;font-weight:bold;'>
+                    {vendorRequest.Description}
+                    </td>
+                    </tr>
+
+                    </table>
+
+                    </td>
+                    </tr>
+
+                    <tr>
+                    <td align='center'
+                    style='background:#003366;color:white;padding:15px;font-size:12px;'>
+
+                    Este correo fue generado automáticamente.<br/>
+
+                    </td>
+                    </tr>
+
+                    </table>
+
+                    </td>
+                    </tr>
+                    </table>
+
                     </body>
-                </html>";
+                    </html>";
 
                 if (vendorRequest.InvoiceImage != null)
                 {

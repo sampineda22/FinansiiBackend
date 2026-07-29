@@ -95,7 +95,7 @@ namespace CRM.Features.Gira.ExpensesDetails
                         sequence.CurrentSequence = $"G{userInfo.BusinessUnit}{sequence.SequenceNumber:D4}";
                     }
 
-                    //isNewSequence = true;
+                    isNewSequence = true;
                     detail.InvoiceId = sequence.CurrentSequence;
                 }
 

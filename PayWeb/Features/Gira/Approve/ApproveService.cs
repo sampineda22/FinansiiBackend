@@ -369,7 +369,6 @@ namespace CRM.Features.Gira.Approve
                     style='background:#003366;color:white;padding:15px;font-size:12px;'>
 
                     Este correo fue generado automáticamente.<br/>
-                    Favor no responder.
 
                     </td>
                     </tr>
