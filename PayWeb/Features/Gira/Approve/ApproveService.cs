@@ -1,6 +1,5 @@
-﻿using Azure;
-using CRM.Features.Admin.Users;
-using CRM.Features.Gira.AXExpenses;
+﻿using CRM.Features.Gira.AXExpenses;
+using CRM.Features.Gira.ExpensesSettings;
 using CRM.Features.Gira.Historical;
 using CRM.General;
 using CRM.General.GeneralDTOs;
@@ -9,20 +8,16 @@ using CRM.Infrastructure.Enum;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using PayWeb.Common;
 using PayWeb.Infrastructure.Core;
-using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Net.Mail;
 using System.Net.Mime;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using ExpenseAccount = CRM.Features.Gira.ExpensesSettings.ExpenseAccount;
@@ -36,6 +31,7 @@ namespace CRM.Features.Gira.Approve
         private readonly IUnitOfWork _unitOfWork;
         private readonly GeneralService _generalService;
         private readonly ProxyConnectionSettings _proxyConnectionSettings;
+        
 
         public ApproveService(IUnitOfWorkGira unitOfWorkGira, IUnitOfWork unitOfWork, IOptions<ProxyConnectionSettings> proxyConnectionSettings, GeneralService generalService)
         {
@@ -75,7 +71,6 @@ namespace CRM.Features.Gira.Approve
                 ExpenseDetail detail = _unitOfWorkGira.Repository<ExpenseDetail>().Query().Include(x => x.ExpenseCategory).ThenInclude(e => e.ExpenseType).Include(x => x.FuelType).Include(x => x.Status)
                                               .Where(x => x.CompanyCode == companyCode
                                                        && x.Id == id).FirstOrDefault();
-
                 
                 if (detail.InUse)
                 {
@@ -234,7 +229,6 @@ namespace CRM.Features.Gira.Approve
                 return EntityResponse.CreateError("Error en CreateJournal: " + ex.Message);
             }
         }
-
         public async Task<EntityResponse> UpdateCAI(ExpenseDetail detail, string response)
         {
             try
@@ -426,6 +420,60 @@ namespace CRM.Features.Gira.Approve
             catch(Exception ex)
             {
                 return EntityResponse.CreateError("Error en método UpdateCAI: " + ex.Message);
+            }
+        }
+
+        public async Task<EntityResponse> SendApprovalNotification(ExpenseDetail detail, string user)
+        {
+            try
+            {
+                SqlParameter[] parameters = { new SqlParameter("@userCode", detail.PersonalCode) };
+                StringResponse userCode = _unitOfWork.Repository<StringResponse>().GetSP<StringResponse>("[Gira].[GetIMCoreUser]", parameters).FirstOrDefault();
+
+                ExpenseCategory category = _unitOfWorkGira.Repository<ExpenseCategory>().Query().Where(x => x.Id == detail.ExpenseCategoryId).FirstOrDefault();
+
+                if (!String.IsNullOrEmpty(userCode.Value))
+                {
+                    NotificationDto notification = new()
+                    {
+                        Users = new List<string>
+                        {
+                            userCode.Value
+                        },
+                        
+                        Title = string.IsNullOrWhiteSpace(detail.RejectionMotive)
+                              ? "Gasto aprobado"
+                              : "Gasto rechazado",
+                        Body = string.IsNullOrWhiteSpace(detail.RejectionMotive)
+                              ? $"El gasto #{category.Name} fue aprobado por {user}."
+                              : $"El gasto #{category.Name} fue rechazado por {user}. Motivo: {detail.RejectionMotive}",
+                        Category = "expense",
+                        Data = new Dictionary<string, string>
+                        {
+                            [ "ExpenseId"] = detail.Id.ToString(),
+                            [ "CompanyCode"] = detail.CompanyCode.ToString(),
+                            [ "ApprovedBy"] = user,
+                            [ "Status"] = string.IsNullOrWhiteSpace(detail.RejectionMotive)
+                                          ? "Approved"
+                                          : "Rejected"
+                        }
+                    };
+
+                    EntityResponse response = await _generalService.EnviarNotificacionAsync(notification);
+
+                    if (!response.Ok)
+                    {
+                        return EntityResponse.CreateError(response.Mensaje);
+                    }
+
+                    return EntityResponse.CreateOk(response);
+                }
+
+                return EntityResponse.CreateError("No se encontró el usuario receptor para el envio de notificaciones. Favor de notificarle por otro medio.");
+            }
+            catch (Exception ex)
+            {
+                return EntityResponse.CreateError("Error en método SendApprovalNotification: " + ex.ToString());
             }
         }
     }

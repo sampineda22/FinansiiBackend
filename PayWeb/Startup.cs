@@ -159,6 +159,7 @@ namespace PayWeb
 
             services.Configure<AXConnectionSettings>(Configuration.GetSection("AXConnection"));
             services.Configure<ProxyConnectionSettings>(Configuration.GetSection("ProxyConnection"));
+            services.Configure<IMCoreConnectionSettings>(Configuration.GetSection("IMCoreConnection"));
             services.AddScoped<AXEndpoint>();
 
             services.AddScoped<UserAppService>();

@@ -73,8 +73,27 @@ namespace CRM.Features.Gira.Approve
                 }
 
                 if (response is EntityResponse<ExpenseDetail> genericResponse)
-                    response.Mensaje = String.IsNullOrEmpty(rejectionMotive) ? $"El detalle del gasto ha sido aprobado exitosamente. El detalle se asignó al diario {genericResponse.Data.JournalNum}" : "El detalle del gasto ha sido rechazado";
+                {
+                    response.Mensaje = String.IsNullOrEmpty(rejectionMotive) ? $"El detalle del gasto ha sido aprobado exitosamente. El detalle se asignó al diario {genericResponse.Data.JournalNum}. " : "El detalle del gasto ha sido rechazado. ";
+                    
+                    if(!String.IsNullOrEmpty(loggedUser.UserId))
+                    {
+                        EntityResponse notificationResponse = await _approveService.SendApprovalNotification(genericResponse.Data, loggedUser.UserId);
 
+                        if (!notificationResponse.Ok)
+                        {
+                            response.Mensaje += notificationResponse.Mensaje;
+                        }
+
+                        if (notificationResponse is EntityResponse<string> genericResponse2)
+                        {
+                            if (String.IsNullOrEmpty(genericResponse2.Data))
+                            {
+                                response.Mensaje += "No se pudo enviar la notificación";
+                            }
+                        }
+                    }
+                }
                 return Ok(response);
             }
             catch (Exception ex)
