@@ -25,6 +25,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="PdfPig" Version="0.1.15" />
     <PackageReference Include="ReportViewerCore.NETCore" Version="15.1.14" />
     <PackageReference Include="RestSharp" Version="114.0.0" />
     <PackageReference Include="SSH.NET" Version="2024.0.0" />

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PayWeb.Common;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -47,6 +48,17 @@ namespace CRM.Features.Credits.ReceiptBreakdownReport
         public async Task<IActionResult> CreateReports(string start, string end, string weekNumber, string companyCode, string salesAgentSelected)
         {
             EntityResponse response = await _receiptBreakdownReportService.CreateWorkpaperReports(start, end, weekNumber, companyCode, salesAgentSelected);
+            if (!response.Ok)
+            {
+                return BadRequest(response);
+            }
+            return Ok();
+        }
+
+        [HttpPost("CreateCedulaWorkbookFromPdf")]
+        public async Task<IActionResult> CreateCedulaWorkbookFromPdf([FromBody] List<string> weekFolders)
+        {
+            EntityResponse response = await _receiptBreakdownReportService.CreateCedulaWorkbookFromPdf(weekFolders, @"C:\Users\spineda\OneDrive - INTERMODA SA DE CV\Escritorio\Cedulas.xlsx");
             if (!response.Ok)
             {
                 return BadRequest(response);

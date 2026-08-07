@@ -6,6 +6,7 @@ using System;
 using PayWeb.Common;
 using System.Threading.Tasks;
 using CRM.Features.Admin.Users;
+using System.Collections.Generic;
 
 namespace CRM.Features.Credits.ReceiptBreakdown
 {
@@ -89,6 +90,28 @@ namespace CRM.Features.Credits.ReceiptBreakdown
         public async Task<IActionResult> GetFiscalWeeks(string recId)
         {
             EntityResponse response = await _receiptBreakdownService.GetFiscalWeeks(recId);
+            if (!response.Ok)
+            {
+                return BadRequest(response);
+            }
+            return Ok(response);
+        }
+
+        [HttpPost("CreateReceiptDetailBreakdownExcelFromPdf")]
+        public async Task<IActionResult> CreateReceiptDetailBreakdownExcelFromPdf([FromBody] List<string> weekFolders)
+        {
+            EntityResponse response = await _receiptBreakdownService.CreateReceiptDetailBreakdownExcelFromPdf(weekFolders);
+            if (!response.Ok)
+            {
+                return BadRequest(response);
+            }
+            return Ok(response);
+        }
+
+        [HttpPost("CreateReceiptDetailBreakdownWorkbookFromPdf")]
+        public async Task<IActionResult> CreateReceiptDetailBreakdownWorkbookFromPdf([FromBody] List<string> weekFolders)
+        {
+            EntityResponse response = await _receiptBreakdownService.CreateReceiptDetailBreakdownWorkbookFromPdf(weekFolders, @"C:\Users\spineda\OneDrive - INTERMODA SA DE CV\Escritorio\Desglose de Recibos Enero a Junio 2026.xlsx");
             if (!response.Ok)
             {
                 return BadRequest(response);

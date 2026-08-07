@@ -3,6 +3,7 @@ using CRM.Features.Credits.ReceiptDetailBreakdownReport;
 using CRM.Features.Credits.WorkpaperReport;
 using CRM.Infrastructure.Core;
 using CRM.Models.General;
+using Finansii.Reports.PdfImport;
 using Microsoft.Data.SqlClient;
 using OfficeOpenXml;
 using OfficeOpenXml.Table;
@@ -374,6 +375,284 @@ namespace CRM.Features.Credits.ReceiptBreakdownReport
             {
                 return EntityResponse.CreateError($"Error en metodo CopyExcelBook: {ex.Message}.");
             }
+        }
+
+        private static readonly string[] CedulaSheetColumns =
+        {
+            "Asesor",
+            "# Recibo", "Fecha", "Estado", "Cédula", "Numero de Cliente", "Cliente",
+            "Código Cobrador", "Divisa", "Valor en Divisa", "Valor Recibo",
+            "Forma de Pago", "Efectivo", "Transferencia", "Deducción",
+            "Cheque Dia", "Cheque Posfechado", "Fecha de Vencimiento", "Banco"
+        };
+
+        /// <summary>
+        /// Lee todos los "Reporte de Cedula" de las semanas indicadas y deja el
+        /// desglose de todos junto en un solo Excel, una fila por registro. La primera
+        /// columna es el Asesor, tomado del nombre de la carpeta que contiene el PDF.
+        /// No se lee el "Resumen de Cuentas": solo el desglose.
+        /// </summary>
+        /// <param name="rootPath">
+        /// Carpeta raiz, p. ej.
+        /// \\10.100.0.41\boveda de documentos\Facturacion\INTERMODA SA DE CV - Cedulas de Asesores de Venta\2026
+        /// </param>
+        /// <param name="subfolders">
+        /// Semanas a recorrer dentro de rootPath, p. ej.
+        /// { "Semana 2 05-01-2026 al 11-01-2026", "Semana 3 12-01-2026 al 18-01-2026" }.
+        /// Se busca de forma recursiva dentro de cada una. Si viene null o vacia se
+        /// recorre rootPath completo.
+        /// </param>
+        /// <param name="outputFilePath">
+        /// Ruta del .xlsx a generar. Si se indica una carpeta, se crea dentro con el
+        /// nombre "Cedulas.xlsx".
+        /// </param>
+        /// <param name="fileNamePrefix">Solo se leen los .pdf cuyo nombre empieza con este texto.</param>
+        /// <param name="overwriteExisting">Si false y el archivo de salida ya existe, no hace nada.</param>
+        public async Task<EntityResponse> CreateCedulaWorkbookFromPdf(
+            List<string> subfolders,
+            string outputFilePath,
+            string fileNamePrefix = "Reporte de Cédula -",
+            bool overwriteExisting = true)
+        {
+            try
+            {
+                string rootPath = @"\\10.100.0.41\boveda de documentos\Facturacion\INTERMODA SA DE CV - Cédulas de Asesores de Venta\2026";
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+                int skipped = 0;
+                List<string> problems = new();
+
+                if (string.IsNullOrWhiteSpace(rootPath))
+                    return EntityResponse.CreateError("Debe indicar la carpeta raiz (rootPath).");
+
+                if (!Directory.Exists(rootPath))
+                    return EntityResponse.CreateError($"No se encontro la carpeta raiz: {rootPath}");
+
+                if (string.IsNullOrWhiteSpace(fileNamePrefix))
+                    return EntityResponse.CreateError("Debe indicar el prefijo de los archivos a leer.");
+
+                if (string.IsNullOrWhiteSpace(outputFilePath))
+                    return EntityResponse.CreateError("Debe indicar la ruta del archivo Excel de salida (outputFilePath).");
+
+                // si dieron una carpeta, se arma el nombre del archivo
+                if (Directory.Exists(outputFilePath) || string.IsNullOrEmpty(Path.GetExtension(outputFilePath)))
+                    outputFilePath = Path.Combine(outputFilePath, "Cedulas.xlsx");
+
+                string outputFolder = Path.GetDirectoryName(outputFilePath);
+                if (!string.IsNullOrEmpty(outputFolder)) Directory.CreateDirectory(outputFolder);
+
+                if (File.Exists(outputFilePath) && !overwriteExisting)
+                    return EntityResponse.CreateError($"El archivo ya existe y no se pidio reemplazarlo: {outputFilePath}");
+
+                List<string> pdfFiles = FindReceiptPdfFiles(rootPath, subfolders, fileNamePrefix, problems, out string discoveryError);
+                if (discoveryError != null) return EntityResponse.CreateError(discoveryError);
+
+                // se lee todo primero: asi no se deja un archivo a medias si algo falla
+                List<CedulaPdfReport> reports = new();
+
+                foreach (string pdfPath in pdfFiles)
+                {
+                    try
+                    {
+                        CedulaPdfReport report = CedulaPdfParser.Parse(pdfPath);
+
+                        if (report.Details.Count == 0)
+                        {
+                            problems.Add($"{pdfPath}: el PDF no trae filas de detalle.");
+                            skipped++;
+                            continue;
+                        }
+
+                        // report.Notes son informativas y no se reportan
+                        foreach (string warning in report.Warnings) problems.Add($"{pdfPath}: {warning}");
+                        reports.Add(report);
+                    }
+                    catch (Exception ex)
+                    {
+                        problems.Add($"{pdfPath}: {ex.Message}");
+                        skipped++;
+                    }
+                }
+
+                if (reports.Count == 0)
+                    return EntityResponse.CreateError($"No se pudo leer ningun PDF.{BuildProblemsSummary(problems)}");
+
+                // ordenado por semana de menor a mayor, y dentro de cada semana por asesor.
+                // Se ordena por numero: si no, "Semana 10" iria antes de "Semana 2".
+                reports = reports
+                    .OrderBy(r => ParseNumberOrMax(r.Year))
+                    .ThenBy(r => ParseNumberOrMax(r.WeekNumber))
+                    .ThenBy(r => r.Asesor ?? "", StringComparer.CurrentCultureIgnoreCase)
+                    .ToList();
+
+                if (File.Exists(outputFilePath)) File.Delete(outputFilePath);
+
+                int written = 0;
+
+                using (ExcelPackage package = new())
+                {
+                    ExcelWorksheet worksheet = package.Workbook.Worksheets.Add("Cédulas");
+
+                    for (int c = 0; c < CedulaSheetColumns.Length; c++)
+                        worksheet.Cells[1, c + 1].Value = CedulaSheetColumns[c];
+
+                    using (var header = worksheet.Cells[1, 1, 1, CedulaSheetColumns.Length])
+                    {
+                        header.Style.Font.Bold = true;
+                        header.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        header.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(217, 225, 242));
+                        header.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                        header.Style.WrapText = true;
+                        header.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+                    }
+                    worksheet.Row(1).Height = 30;
+
+                    int row = 2;
+                    foreach (CedulaPdfReport report in reports)
+                    {
+                        foreach (CedulaPdfRow d in report.Details)
+                        {
+                            int col = 1;
+                            worksheet.Cells[row, col++].Value = d.Asesor;
+
+                            // se escribe el numero de recibo arrastrado: en el PDF viene
+                            // vacio cuando se repite, y aqui las filas se mezclan entre
+                            // asesores y semanas, asi que cada fila debe quedar identificada
+                            worksheet.Cells[row, col++].Value = d.ReceiptNumber;
+
+                            if (d.ProcessDate.HasValue) worksheet.Cells[row, col++].Value = d.ProcessDate.Value;
+                            else worksheet.Cells[row, col++].Value = d.ProcessDateText;
+
+                            worksheet.Cells[row, col++].Value = d.State;
+                            worksheet.Cells[row, col++].Value = d.Workpaper;
+                            worksheet.Cells[row, col++].Value = d.ClientAccount;
+                            worksheet.Cells[row, col++].Value = d.ClientName;
+                            worksheet.Cells[row, col++].Value = d.DebtCollector;
+                            worksheet.Cells[row, col++].Value = d.CurrencyCode;
+                            worksheet.Cells[row, col++].Value = d.ReceiptAmountInCurrency;
+                            worksheet.Cells[row, col++].Value = d.ReceiptAmount;
+                            worksheet.Cells[row, col++].Value = d.PaymentMethod;
+                            worksheet.Cells[row, col++].Value = d.CashAmount;
+                            worksheet.Cells[row, col++].Value = d.TransferAmount;
+                            worksheet.Cells[row, col++].Value = d.DeductedAmount;
+                            worksheet.Cells[row, col++].Value = d.CheckAmount;
+                            worksheet.Cells[row, col++].Value = d.PostdatedCheckAmount;
+
+                            if (d.CheckDueDate.HasValue) worksheet.Cells[row, col++].Value = d.CheckDueDate.Value;
+                            else worksheet.Cells[row, col++].Value = d.CheckDueDateText;
+
+                            worksheet.Cells[row, col].Value = d.BankName;
+
+                            row++;
+                            written++;
+                        }
+                    }
+
+                    int lastRow = row - 1;
+
+                    // formatos por columna
+                    for (int c = 1; c <= CedulaSheetColumns.Length; c++)
+                    {
+                        string name = CedulaSheetColumns[c - 1];
+                        var body = worksheet.Cells[2, c, Math.Max(lastRow, 2), c];
+
+                        if (name == "Fecha" || name == "Fecha de Vencimiento")
+                        {
+                            body.Style.Numberformat.Format = "dd/mm/yyyy";
+                            body.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                        }
+                        else if (name == "Valor en Divisa" || name == "Valor Recibo" || name == "Efectivo" ||
+                                 name == "Transferencia" || name == "Deducción" || name == "Cheque Dia" ||
+                                 name == "Cheque Posfechado")
+                        {
+                            body.Style.Numberformat.Format = "#,##0.00";
+                            body.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
+                        }
+                    }
+
+                    worksheet.View.FreezePanes(2, 1);
+                    worksheet.Cells[1, 1, Math.Max(lastRow, 1), CedulaSheetColumns.Length].AutoFilter = true;
+
+                    worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns(10, 40);
+
+                    await package.SaveAsAsync(new FileInfo(outputFilePath));
+                }
+
+                string message = $"Se genero el archivo con {written} filas de {reports.Count} reportes " +
+                                 $"({pdfFiles.Count} PDF encontrados): {outputFilePath}";
+                if (skipped > 0) message += $" Se omitieron {skipped}.";
+                message += BuildProblemsSummary(problems);
+
+                return EntityResponse.CreateOk(message);
+            }
+            catch (Exception ex)
+            {
+                return EntityResponse.CreateError($"Error en metodo CreateCedulaWorkbookFromPdf: {ex.Message}.");
+            }
+        }
+
+        private static List<string> FindReceiptPdfFiles(
+        string rootPath,
+        List<string> subfolders,
+        string fileNamePrefix,
+        List<string> problems,
+        out string error)
+        {
+            error = null;
+            List<string> targetFolders = new();
+
+            if (subfolders == null || subfolders.Count == 0)
+            {
+                targetFolders.Add(rootPath);
+            }
+            else
+            {
+                foreach (string subfolder in subfolders)
+                {
+                    if (string.IsNullOrWhiteSpace(subfolder)) continue;
+
+                    string folder = Path.Combine(rootPath, subfolder.Trim());
+                    if (Directory.Exists(folder)) targetFolders.Add(folder);
+                    else problems.Add($"No existe la subcarpeta '{subfolder}'.");
+                }
+            }
+
+            if (targetFolders.Count == 0)
+            {
+                error = $"Ninguna de las subcarpetas indicadas existe. {string.Join(" ", problems)}";
+                return new List<string>();
+            }
+
+            List<string> pdfFiles = new();
+
+            foreach (string folder in targetFolders)
+            {
+                pdfFiles.AddRange(Directory
+                    .EnumerateFiles(folder, "*.pdf", SearchOption.AllDirectories)
+                    .Where(f => Path.GetFileName(f).StartsWith(fileNamePrefix, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            pdfFiles = pdfFiles.Distinct(StringComparer.OrdinalIgnoreCase)
+                               .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                               .ToList();
+
+            if (pdfFiles.Count == 0)
+                error = $"No se encontraron archivos .pdf que comiencen con '{fileNamePrefix}'.";
+
+            return pdfFiles;
+        }
+
+        private static int ParseNumberOrMax(string value)
+        => int.TryParse((value ?? "").Trim(), out int n) ? n : int.MaxValue;
+
+        private static string BuildProblemsSummary(List<string> problems)
+        {
+            if (problems == null || problems.Count == 0) return "";
+
+            int show = Math.Min(problems.Count, 20);
+            string text = $" Avisos ({problems.Count}): {string.Join(" | ", problems.Take(show))}";
+            if (problems.Count > show) text += $" ...y {problems.Count - show} mas.";
+            return text;
         }
     }
 }

@@ -61,7 +61,6 @@ namespace CRM.Features.Gira.Historical
 
                 ExpenseDetailDto detail = _unitOfWork.Repository<ExpenseDetailDto>().GetSP<ExpenseDetailDto>("[Gira].[GetExpensesDetailsById]", parameters).FirstOrDefault();
 
-
                 return EntityResponse.CreateOk(detail);
             }
             catch (Exception ex)
